@@ -10,3 +10,9 @@ Made with:
 - Mux
 - pq
 - PostgreSQL
+
+---
+
+Integrated with:
+
+- Semaphore CI
