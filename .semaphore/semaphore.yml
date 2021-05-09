@@ -1,0 +1,61 @@
+version: v1.0
+name: Go
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: Install
+    task:
+      jobs:
+        - name: Download modules
+          commands:
+            - sem-version go 1.16
+            - checkout
+            - cache restore
+            - go mod vendor
+            - cache store
+      env_vars:
+        - name: GO111MODULE
+          value: 'on'
+        - name: GOFLAGS
+          value: '-mod=vendor'
+  - name: Test
+    task:
+      env_vars:
+        - name: GO111MODULE
+          value: 'on'
+        - name: GOFLAGS
+          value: '-mod=vendor'
+      prologue:
+        commands:
+          - sem-version go 1.13
+          - sem-service start postgres
+          - checkout
+          - 'cache restore '
+          - go mod vendor
+          - source env-sample
+      jobs:
+        - name: go test
+          commands:
+            - go test ./...
+  - name: Build
+    task:
+      env_vars:
+        - name: GO111MODULE
+          value: 'on'
+        - name: GOFLAGS
+          value: '-mod=vendor'
+      prologue:
+        commands:
+          - sem-version go 1.13
+          - sem-service start postgres
+          - checkout
+          - 'cache restore '
+          - go mod vendor
+          - source env-sample
+      jobs:
+        - name: go build
+          commands:
+            - go build -v -o go-mux.bin
+            - artifact push project --force go-mux.bin
