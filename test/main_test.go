@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/ebcp-dev/gorest-api/app"
 )
@@ -32,12 +33,12 @@ func TestMain(m *testing.M) {
 
 // Test functions
 
-// Tests response if products table is empty.
-// Deletes all records from products table and sends GET request to /products endpoint.
+// Tests response if users table is empty.
+// Deletes all records from users table and sends GET request to /users endpoint.
 func TestEmptyTable(t *testing.T) {
 	clearTable()
 
-	req, _ := http.NewRequest("GET", "/products", nil)
+	req, _ := http.NewRequest("GET", "/users", nil)
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
@@ -47,42 +48,56 @@ func TestEmptyTable(t *testing.T) {
 	}
 }
 
-// Test response if requested product is non-existent.
-// Tests if status code = 404 & response message = "Product not found".
-func TestGetNonExistentProduct(t *testing.T) {
+// Test response if requested user is non-existent.
+// Tests if status code = 404 & response message = "User not found".
+func TestGetNonExistentUser(t *testing.T) {
 	clearTable()
 
-	req, _ := http.NewRequest("GET", "/product/11", nil)
+	req, _ := http.NewRequest("GET", "/user/11", nil)
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 
 	var m map[string]string
 	json.Unmarshal(response.Body.Bytes(), &m)
-	if m["error"] != "Product not found" {
-		t.Errorf("Expected the 'error' key of the response to be set to 'Product not found'. Got '%s'", m["error"])
+	if m["error"] != "User not found" {
+		t.Errorf("Expected the 'error' key of the response to be set to 'User not found'. Got '%s'", m["error"])
 	}
 }
 
-// Test response when fetching a specific product.
+// Test response on login route.
 // Tests if status code = 200.
-func TestGetProduct(t *testing.T) {
+func TestLoginUser(t *testing.T) {
 	clearTable()
-	addProducts(1)
+	addUsers(1)
 
-	req, _ := http.NewRequest("GET", "/product/1", nil)
+	var jsonStr = []byte(`{"email":"testemail0@gmail.com", "password":"password0"}`)
+	req, _ := http.NewRequest("POST", "/user/login", bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+}
+
+// Test response when fetching a specific user.
+// Tests if status code = 200.
+func TestGetUser(t *testing.T) {
+	clearTable()
+	addUsers(1)
+
+	req, _ := http.NewRequest("GET", "/user/1", nil)
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
 }
 
-// Test the process of creating a new product by manually adding a test product to db.
+// Test the process of creating a new user by manually adding a test user to db.
 // Tests if status code = 200 & response contains JSON object with the right contents.
-func TestCreateProduct(t *testing.T) {
+func TestCreateUser(t *testing.T) {
 	clearTable()
 
-	var jsonStr = []byte(`{"name":"test product", "price": 11.22}`)
-	req, _ := http.NewRequest("POST", "/product", bytes.NewBuffer(jsonStr))
+	var jsonStr = []byte(`{"email":"testemail0@gmail.com", "password": "password0"}`)
+	req, _ := http.NewRequest("POST", "/user", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
 	response := executeRequest(req)
@@ -91,34 +106,34 @@ func TestCreateProduct(t *testing.T) {
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
 
-	if m["name"] != "test product" {
-		t.Errorf("Expected product name to be 'test product'. Got '%v'", m["name"])
+	if m["email"] != "testemail0@gmail.com" {
+		t.Errorf("Expected user email to be 'testemail0@gmail.com'. Got '%v'", m["email"])
 	}
 
-	if m["price"] != 11.22 {
-		t.Errorf("Expected product price to be '11.22'. Got '%v'", m["price"])
+	if m["password"] != "password0" {
+		t.Errorf("Expected user password to be 'password0'. Got '%v'", m["password"])
 	}
 
 	// The id is compared to 1.0 because JSON unmarshaling converts numbers to
 	// floats, when the target is a map[string]interface{}.
 	if m["id"] != 1.0 {
-		t.Errorf("Expected product ID to be '1'. Got '%v'", m["id"])
+		t.Errorf("Expected user ID to be '1'. Got '%v'", m["id"])
 	}
 }
 
-// Test process of updating a product.
+// Test process of updating a user.
 // Tests if status code = 200 & response contains JSON object with the updated contents.
-func TestUpdateProduct(t *testing.T) {
+func TestUpdateUser(t *testing.T) {
 	clearTable()
-	addProducts(1)
+	addUsers(1)
 
-	req, _ := http.NewRequest("GET", "/product/1", nil)
+	req, _ := http.NewRequest("GET", "/user/1", nil)
 	response := executeRequest(req)
-	var originalProduct map[string]interface{}
-	json.Unmarshal(response.Body.Bytes(), &originalProduct)
+	var originalUser map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &originalUser)
 
-	var jsonStr = []byte(`{"name":"test product - updated name", "price": 11.22}`)
-	req, _ = http.NewRequest("PUT", "/product/1", bytes.NewBuffer(jsonStr))
+	var jsonStr = []byte(`{"email":"testemail0@gmail.com - updated email", "password": "password01"}`)
+	req, _ = http.NewRequest("PUT", "/user/1", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
 	response = executeRequest(req)
@@ -128,35 +143,35 @@ func TestUpdateProduct(t *testing.T) {
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
 
-	if m["id"] != originalProduct["id"] {
-		t.Errorf("Expected the id to remain the same (%v). Got %v", originalProduct["id"], m["id"])
+	if m["id"] != originalUser["id"] {
+		t.Errorf("Expected the id to remain the same (%v). Got %v", originalUser["id"], m["id"])
 	}
 
-	if m["name"] == originalProduct["name"] {
-		t.Errorf("Expected the name to change from '%v' to '%v'. Got '%v'", originalProduct["name"], m["name"], m["name"])
+	if m["email"] == originalUser["email"] {
+		t.Errorf("Expected the email to change from '%v' to '%v'. Got '%v'", originalUser["email"], m["email"], m["email"])
 	}
 
-	if m["price"] == originalProduct["price"] {
-		t.Errorf("Expected the price to change from '%v' to '%v'. Got '%v'", originalProduct["price"], m["price"], m["price"])
+	if m["password"] == originalUser["password"] {
+		t.Errorf("Expected the password to change from '%v' to '%v'. Got '%v'", originalUser["password"], m["password"], m["password"])
 	}
 }
 
-// Test process of deleting products.
+// Test process of deleting users.
 // Tests if status code = 200.
-func TestDeleteProduct(t *testing.T) {
+func TestDeleteUser(t *testing.T) {
 	clearTable()
-	addProducts(1)
+	addUsers(1)
 
-	req, _ := http.NewRequest("GET", "/product/1", nil)
+	req, _ := http.NewRequest("GET", "/user/1", nil)
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
-	req, _ = http.NewRequest("DELETE", "/product/1", nil)
+	req, _ = http.NewRequest("DELETE", "/user/1", nil)
 	response = executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
 
-	req, _ = http.NewRequest("GET", "/product/1", nil)
+	req, _ = http.NewRequest("GET", "/user/1", nil)
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 }
@@ -179,13 +194,14 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 }
 
 // Adds 1 or more records to table for testing.
-func addProducts(count int) {
+func addUsers(count int) {
 	if count < 1 {
 		count = 1
 	}
 
 	for i := 0; i < count; i++ {
-		a.DB.Exec("INSERT INTO products(name, price) VALUES($1, $2)", "Product "+strconv.Itoa(i), (i+1.0)*10)
+		timestamp := time.Now()
+		a.DB.Exec("INSERT INTO users(email, password, createdat, updatedat) VALUES($1, $2, $3, $4)", "testemail"+strconv.Itoa(i)+"@gmail.com", "password"+strconv.Itoa(i), timestamp, timestamp)
 	}
 }
 
@@ -198,15 +214,17 @@ func ensureTableExists() {
 
 // Clean test table.
 func clearTable() {
-	a.DB.Exec("DELETE FROM products")
-	a.DB.Exec("ALTER SEQUENCE products_id_seq RESTART WITH 1")
+	a.DB.Exec("DELETE FROM users")
+	a.DB.Exec("ALTER SEQUENCE users_id_seq RESTART WITH 1")
 }
 
 // SQL query to create table.
-const tableCreationQuery = `CREATE TABLE IF NOT EXISTS products
+const tableCreationQuery = `CREATE TABLE IF NOT EXISTS users
 (
-    id SERIAL,
-    name TEXT NOT NULL,
-    price NUMERIC(10,2) NOT NULL DEFAULT 0.00,
-    CONSTRAINT products_pkey PRIMARY KEY (id)
+		id serial,
+		email varchar(225) not null unique,
+		password varchar(225) not null,
+		createdat timestamp not null,
+		updatedat timestamp not null,
+		primary key (id)
 )`

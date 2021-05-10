@@ -18,6 +18,18 @@ type App struct {
 	DB     *sql.DB
 }
 
+// Schema for user table
+const userSchema = `
+	create table if not exists users (
+		id serial,
+		email varchar(225) not null unique,
+		password varchar(225) not null,
+		createdat timestamp not null,
+		updatedat timestamp not null,
+		primary key (id)
+	);
+`
+
 // Receives database credentials and connects to database.
 func (a *App) Initialize(user, password, dbname string) {
 	connectionString :=
@@ -32,6 +44,7 @@ func (a *App) Initialize(user, password, dbname string) {
 
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()
+	a.DB.Exec(userSchema)
 }
 
 // Starts the application.
@@ -42,44 +55,73 @@ func (a *App) Run(addr string) {
 
 // Defines routes.
 func (a *App) initializeRoutes() {
-	a.Router.HandleFunc("/products", a.getProducts).Methods("GET")
-	a.Router.HandleFunc("/product", a.createProduct).Methods("POST")
-	a.Router.HandleFunc("/product/{id:[0-9]+}", a.getProduct).Methods("GET")
-	a.Router.HandleFunc("/product/{id:[0-9]+}", a.updateProduct).Methods("PUT")
-	a.Router.HandleFunc("/product/{id:[0-9]+}", a.deleteProduct).Methods("DELETE")
+	a.Router.HandleFunc("/users", a.getUsers).Methods("GET")
+	a.Router.HandleFunc("/user", a.createUser).Methods("POST")
+	a.Router.HandleFunc("/user/login", a.loginUser).Methods("POST")
+	a.Router.HandleFunc("/user/{id:[0-9]+}", a.getUser).Methods("GET")
+	a.Router.HandleFunc("/user/{id:[0-9]+}", a.updateUser).Methods("PUT")
+	a.Router.HandleFunc("/user/{id:[0-9]+}", a.deleteUser).Methods("DELETE")
 }
 
 // Route handlers
 
-// Retrieves product from db using id from URL.
-func (a *App) getProduct(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	// Convert id string variable to int.
-	id, err := strconv.Atoi(vars["id"])
-	// Respond with error if id is wrong format/type.
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid product ID")
+// Retrieves user from db using id from URL.
+func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
+	var u model.User
+	// Gets JSON object from request body.
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&u); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
-	p := model.Product{ID: id}
-	if err := p.GetProduct(a.DB); err != nil {
+	defer r.Body.Close()
+	// Find user in db with email and password from request body.
+	log.Print(u.Password)
+	if err := u.GetUserByEmail(a.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			// Respond with 404 if product not found in db.
-			respondWithError(w, http.StatusNotFound, "Product not found")
+			// Respond with 404 if user not found in db.
+			respondWithError(w, http.StatusNotFound, "User not found")
 		default:
 			// Respond if internal server error.
 			respondWithError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
-	// If product found respond product object.
-	respondWithJSON(w, http.StatusOK, p)
+	// Respond with user in db.
+	respondWithJSON(w, http.StatusOK, u)
 }
 
-// Gets list of product with count and start variables from URL.
-func (a *App) getProducts(w http.ResponseWriter, r *http.Request) {
+// Retrieves user from db using id from URL.
+func (a *App) getUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	// Convert id string variable to int.
+	id, err := strconv.Atoi(vars["id"])
+	// Respond with error if id is wrong format/type.
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	u := model.User{ID: id}
+	if err := u.GetUser(a.DB); err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			// Respond with 404 if user not found in db.
+			respondWithError(w, http.StatusNotFound, "User not found")
+		default:
+			// Respond if internal server error.
+			respondWithError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+	// If user found respond with user object.
+	respondWithJSON(w, http.StatusOK, u)
+}
+
+// Gets list of user with count and start variables from URL.
+func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
 	// Convert count and start string variables to int.
 	count, _ := strconv.Atoi(r.FormValue("count"))
 	start, _ := strconv.Atoi(r.FormValue("start"))
@@ -93,78 +135,78 @@ func (a *App) getProducts(w http.ResponseWriter, r *http.Request) {
 		start = 0
 	}
 
-	products, err := model.GetProducts(a.DB, start, count)
+	users, err := model.GetUsers(a.DB, start, count)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, products)
+	respondWithJSON(w, http.StatusOK, users)
 }
 
-// Inserts new product into db.
-func (a *App) createProduct(w http.ResponseWriter, r *http.Request) {
-	var p model.Product
+// Inserts new user into db.
+func (a *App) createUser(w http.ResponseWriter, r *http.Request) {
+	var u model.User
 	// Gets JSON object from request body.
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&p); err != nil {
+	if err := decoder.Decode(&u); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
 	defer r.Body.Close()
 
-	if err := p.CreateProduct(a.DB); err != nil {
+	if err := u.CreateUser(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	// Respond with newly created product.
-	respondWithJSON(w, http.StatusCreated, p)
+	// Respond with newly created user.
+	respondWithJSON(w, http.StatusCreated, u)
 }
 
-// Updates product in db using id from URL.
-func (a *App) updateProduct(w http.ResponseWriter, r *http.Request) {
+// Updates user in db using id from URL.
+func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// Convert id string variable to int.
 	id, err := strconv.Atoi(vars["id"])
 	// Respond with error if id is wrong format/type.
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid product ID")
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
 		return
 	}
 
-	var p model.Product
+	var u model.User
 	// Gets JSON object from request body.
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&p); err != nil {
+	if err := decoder.Decode(&u); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid resquest payload")
 		return
 	}
 
 	defer r.Body.Close()
-	p.ID = id
+	u.ID = id
 
-	if err := p.UpdateProduct(a.DB); err != nil {
+	if err := u.UpdateUser(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	// Respond with updated product.
-	respondWithJSON(w, http.StatusOK, p)
+	// Respond with updated user.
+	respondWithJSON(w, http.StatusOK, u)
 }
 
-// Deletes product in db using id from URL.
-func (a *App) deleteProduct(w http.ResponseWriter, r *http.Request) {
+// Deletes user in db using id from URL.
+func (a *App) deleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// Convert id string variable to int.
 	id, err := strconv.Atoi(vars["id"])
 	// Respond with error if id is wrong format/type.
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid Product ID")
+		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
 		return
 	}
 
-	p := model.Product{ID: id}
-	if err := p.DeleteProduct(a.DB); err != nil {
+	u := model.User{ID: id}
+	if err := u.DeleteUser(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -176,7 +218,6 @@ func (a *App) deleteProduct(w http.ResponseWriter, r *http.Request) {
 
 // Error message response.
 func respondWithError(w http.ResponseWriter, code int, message string) {
-	log.Printf("Error: %s", message)
 	respondWithJSON(w, code, map[string]string{"error": message})
 }
 
