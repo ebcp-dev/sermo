@@ -57,5 +57,5 @@ blocks:
       jobs:
         - name: go build
           commands:
-            - go build -v -o go-mux.bin
-            - artifact push project --force go-mux.bin
+            - go build -v -o gorest-api.bin
+            - artifact push project --force gorest-api.bin

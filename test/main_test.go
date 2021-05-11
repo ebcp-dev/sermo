@@ -12,10 +12,14 @@ import (
 	"time"
 
 	"github.com/ebcp-dev/gorest-api/app"
+	"github.com/google/uuid"
 )
 
 // References App struct in app.go.
 var a app.App
+
+//Generate new uuid for test
+var testID = uuid.NewString()
 
 // Executes before all other tests.
 func TestMain(m *testing.M) {
@@ -53,7 +57,7 @@ func TestEmptyTable(t *testing.T) {
 func TestGetNonExistentUser(t *testing.T) {
 	clearTable()
 
-	req, _ := http.NewRequest("GET", "/user/11", nil)
+	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusNotFound, response.Code)
@@ -71,7 +75,7 @@ func TestLoginUser(t *testing.T) {
 	clearTable()
 	addUsers(1)
 
-	var jsonStr = []byte(`{"email":"testemail0@gmail.com", "password":"password0"}`)
+	var jsonStr = []byte(`{"email":"testemail1@gmail.com", "password":"password1"}`)
 	req, _ := http.NewRequest("POST", "/user/login", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -85,7 +89,7 @@ func TestGetUser(t *testing.T) {
 	clearTable()
 	addUsers(1)
 
-	req, _ := http.NewRequest("GET", "/user/1", nil)
+	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
 	response := executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
@@ -96,7 +100,7 @@ func TestGetUser(t *testing.T) {
 func TestCreateUser(t *testing.T) {
 	clearTable()
 
-	var jsonStr = []byte(`{"email":"testemail0@gmail.com", "password": "password0"}`)
+	var jsonStr = []byte(`{"email":"testemail1@gmail.com", "password": "password1"}`)
 	req, _ := http.NewRequest("POST", "/user", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -106,18 +110,12 @@ func TestCreateUser(t *testing.T) {
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
 
-	if m["email"] != "testemail0@gmail.com" {
-		t.Errorf("Expected user email to be 'testemail0@gmail.com'. Got '%v'", m["email"])
+	if m["email"] != "testemail1@gmail.com" {
+		t.Errorf("Expected user email to be 'testemail1@gmail.com'. Got '%v'", m["email"])
 	}
 
-	if m["password"] != "password0" {
-		t.Errorf("Expected user password to be 'password0'. Got '%v'", m["password"])
-	}
-
-	// The id is compared to 1.0 because JSON unmarshaling converts numbers to
-	// floats, when the target is a map[string]interface{}.
-	if m["id"] != 1.0 {
-		t.Errorf("Expected user ID to be '1'. Got '%v'", m["id"])
+	if m["password"] != "password1" {
+		t.Errorf("Expected user password to be 'password1'. Got '%v'", m["password"])
 	}
 }
 
@@ -127,13 +125,13 @@ func TestUpdateUser(t *testing.T) {
 	clearTable()
 	addUsers(1)
 
-	req, _ := http.NewRequest("GET", "/user/1", nil)
+	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
 	response := executeRequest(req)
 	var originalUser map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &originalUser)
 
-	var jsonStr = []byte(`{"email":"testemail0@gmail.com - updated email", "password": "password01"}`)
-	req, _ = http.NewRequest("PUT", "/user/1", bytes.NewBuffer(jsonStr))
+	var jsonStr = []byte(`{"email":"testemail1@gmail.com - updated email", "password": "password1 - updated password"}`)
+	req, _ = http.NewRequest("PUT", "/user/"+testID, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
 	response = executeRequest(req)
@@ -162,16 +160,16 @@ func TestDeleteUser(t *testing.T) {
 	clearTable()
 	addUsers(1)
 
-	req, _ := http.NewRequest("GET", "/user/1", nil)
+	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 
-	req, _ = http.NewRequest("DELETE", "/user/1", nil)
+	req, _ = http.NewRequest("DELETE", "/user/"+testID, nil)
 	response = executeRequest(req)
 
 	checkResponseCode(t, http.StatusOK, response.Code)
 
-	req, _ = http.NewRequest("GET", "/user/1", nil)
+	req, _ = http.NewRequest("GET", "/user/"+uuid.NewString(), nil)
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
 }
@@ -199,9 +197,9 @@ func addUsers(count int) {
 		count = 1
 	}
 
-	for i := 0; i < count; i++ {
+	for i := 1; i <= count; i++ {
 		timestamp := time.Now()
-		a.DB.Exec("INSERT INTO users(email, password, createdat, updatedat) VALUES($1, $2, $3, $4)", "testemail"+strconv.Itoa(i)+"@gmail.com", "password"+strconv.Itoa(i), timestamp, timestamp)
+		a.DB.Exec("INSERT INTO users(id, email, password, createdat, updatedat) VALUES($1, $2, $3, $4, $5)", testID, "testemail"+strconv.Itoa(i)+"@gmail.com", "password"+strconv.Itoa(i), timestamp, timestamp)
 	}
 }
 
@@ -215,16 +213,16 @@ func ensureTableExists() {
 // Clean test table.
 func clearTable() {
 	a.DB.Exec("DELETE FROM users")
-	a.DB.Exec("ALTER SEQUENCE users_id_seq RESTART WITH 1")
 }
 
 // SQL query to create table.
-const tableCreationQuery = `CREATE TABLE IF NOT EXISTS users
-(
-		id serial,
-		email varchar(225) not null unique,
-		password varchar(225) not null,
-		createdat timestamp not null,
-		updatedat timestamp not null,
+const tableCreationQuery = `
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE TABLE IF NOT EXISTS users (
+		id uuid DEFAULT uuid_generate_v4 () unique,
+		email varchar(225) NOT NULL UNIQUE,
+		password varchar(225) NOT NULL,
+		createdat timestamp NOT NULL,
+		updatedat timestamp NOT NULL,
 		primary key (id)
-)`
+	);`

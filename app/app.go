@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/ebcp-dev/gorest-api/model"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
@@ -20,12 +21,13 @@ type App struct {
 
 // Schema for user table
 const userSchema = `
-	create table if not exists users (
-		id serial,
-		email varchar(225) not null unique,
-		password varchar(225) not null,
-		createdat timestamp not null,
-		updatedat timestamp not null,
+	CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+	CREATE TABLE IF NOT EXISTS users (
+		id uuid DEFAULT uuid_generate_v4 () unique,
+		email varchar(225) NOT NULL UNIQUE,
+		password varchar(225) NOT NULL,
+		createdat timestamp NOT NULL,
+		updatedat timestamp NOT NULL,
 		primary key (id)
 	);
 `
@@ -58,9 +60,9 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/users", a.getUsers).Methods("GET")
 	a.Router.HandleFunc("/user", a.createUser).Methods("POST")
 	a.Router.HandleFunc("/user/login", a.loginUser).Methods("POST")
-	a.Router.HandleFunc("/user/{id:[0-9]+}", a.getUser).Methods("GET")
-	a.Router.HandleFunc("/user/{id:[0-9]+}", a.updateUser).Methods("PUT")
-	a.Router.HandleFunc("/user/{id:[0-9]+}", a.deleteUser).Methods("DELETE")
+	a.Router.HandleFunc("/user/{id}", a.getUser).Methods("GET")
+	a.Router.HandleFunc("/user/{id}", a.updateUser).Methods("PUT")
+	a.Router.HandleFunc("/user/{id}", a.deleteUser).Methods("DELETE")
 }
 
 // Route handlers
@@ -77,7 +79,6 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 	// Find user in db with email and password from request body.
-	log.Print(u.Password)
 	if err := u.GetUserByEmail(a.DB); err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -97,11 +98,9 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 func (a *App) getUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// Convert id string variable to int.
-	id, err := strconv.Atoi(vars["id"])
-	// Respond with error if id is wrong format/type.
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
-		return
+		respondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
 	u := model.User{ID: id}
@@ -168,11 +167,9 @@ func (a *App) createUser(w http.ResponseWriter, r *http.Request) {
 func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// Convert id string variable to int.
-	id, err := strconv.Atoi(vars["id"])
-	// Respond with error if id is wrong format/type.
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
-		return
+		respondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
 	var u model.User
@@ -198,11 +195,9 @@ func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
 func (a *App) deleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// Convert id string variable to int.
-	id, err := strconv.Atoi(vars["id"])
-	// Respond with error if id is wrong format/type.
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
-		return
+		respondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
 	u := model.User{ID: id}

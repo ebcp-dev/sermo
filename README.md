@@ -13,7 +13,7 @@ Made with:
 
 ---
 
-Integrated with:
+CI/CD:
 
 - Semaphore CI
 
