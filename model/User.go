@@ -48,7 +48,7 @@ func GetUsers(db *sql.DB, start, count int) ([]User, error) {
 	// Store query results into users variable if no errors.
 	for rows.Next() {
 		var u User
-		if err := rows.Scan(&u.ID, &u.Email, &u.Password); err != nil {
+		if err := rows.Scan(&u.ID, &u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, u)

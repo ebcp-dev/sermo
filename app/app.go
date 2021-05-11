@@ -7,7 +7,9 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/ebcp-dev/gorest-api/model"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -31,6 +33,9 @@ const userSchema = `
 		primary key (id)
 	);
 `
+
+// Used for validating header tokens.
+var mySigningKey = []byte("captainjacksparrowsayshi")
 
 // Receives database credentials and connects to database.
 func (a *App) Initialize(user, password, dbname string) {
@@ -57,12 +62,13 @@ func (a *App) Run(addr string) {
 
 // Defines routes.
 func (a *App) initializeRoutes() {
-	a.Router.HandleFunc("/users", a.getUsers).Methods("GET")
 	a.Router.HandleFunc("/user", a.createUser).Methods("POST")
 	a.Router.HandleFunc("/user/login", a.loginUser).Methods("POST")
 	a.Router.HandleFunc("/user/{id}", a.getUser).Methods("GET")
-	a.Router.HandleFunc("/user/{id}", a.updateUser).Methods("PUT")
-	a.Router.HandleFunc("/user/{id}", a.deleteUser).Methods("DELETE")
+	// Authorized routes.
+	a.Router.Handle("/users", isAuthorized(a.getUsers)).Methods("GET")
+	a.Router.Handle("/user/{id}", isAuthorized(a.updateUser)).Methods("PUT")
+	a.Router.Handle("/user/{id}", isAuthorized(a.deleteUser)).Methods("DELETE")
 }
 
 // Route handlers
@@ -90,6 +96,12 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	// Generate and send token to client with response header.
+	validToken, err := GenerateJWT()
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+	}
+	w.Header().Add("Token", validToken)
 	// Respond with user in db.
 	respondWithJSON(w, http.StatusOK, u)
 }
@@ -210,6 +222,50 @@ func (a *App) deleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // Helper functions
+
+// Authorization middleware
+func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header["Token"] != nil {
+			token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("There was an error")
+				}
+				return mySigningKey, nil
+			})
+
+			if err != nil {
+				respondWithError(w, http.StatusInternalServerError, err.Error())
+			}
+
+			if token.Valid {
+				endpoint(w, r)
+			}
+		} else {
+			respondWithError(w, http.StatusUnauthorized, "Unauthorized")
+		}
+	})
+}
+
+// Generate JWT
+func GenerateJWT() (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	claims := token.Claims.(jwt.MapClaims)
+
+	claims["authorized"] = true
+	claims["client"] = "Elliot Forbes"
+	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+
+	tokenString, err := token.SignedString(mySigningKey)
+
+	if err != nil {
+		// fmt.Errorf("Something Went Wrong: %s", err.Error())
+		return "", err
+	}
+
+	return tokenString, nil
+}
 
 // Error message response.
 func respondWithError(w http.ResponseWriter, code int, message string) {
