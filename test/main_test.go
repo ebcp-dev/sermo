@@ -8,17 +8,22 @@ import (
 	"testing"
 
 	"github.com/ebcp-dev/gorest-api/app"
+	"github.com/ebcp-dev/gorest-api/db"
 )
 
 // References App struct in app.go.
 var a app.App
 
+// References DB struct in app.go.
+var d db.DB
+
 // Executes before all other tests.
 func TestMain(m *testing.M) {
-	a.Initialize(
+	d.Initialize(
 		os.Getenv("APP_DB_USERNAME"),
 		os.Getenv("APP_DB_PASSWORD"),
 		os.Getenv("APP_DB_NAME"))
+	a.Initialize()
 	ensureTableExists()
 	// Executes tests.
 	code := m.Run()
@@ -46,14 +51,14 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 
 // Ensures table needed for testing exists.
 func ensureTableExists() {
-	if _, err := a.DB.Exec(tableCreationQuery); err != nil {
+	if _, err := d.Database.Exec(tableCreationQuery); err != nil {
 		log.Fatal(err)
 	}
 }
 
 // Clean test table.
 func clearTable() {
-	a.DB.Exec("DELETE FROM users")
+	d.Database.Exec("DELETE FROM users")
 }
 
 // SQL query to create table.

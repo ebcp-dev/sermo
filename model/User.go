@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 )
 
@@ -15,7 +14,6 @@ type User struct {
 	Password  string    `json:"password" validate:"required" sql:"password"`
 	CreatedAt time.Time `json:"createdat" sql:"createdat"`
 	UpdatedAt time.Time `json:"updatedat" sql:"updatedat"`
-	jwt.StandardClaims
 }
 
 // Query operations
@@ -27,7 +25,7 @@ func (u *User) GetUser(db *sql.DB) error {
 }
 
 // Gets a specific user by email and password.
-func (u *User) GetUserByEmail(db *sql.DB) error {
+func (u *User) GetUserByEmailAndPassword(db *sql.DB) error {
 	return db.QueryRow("SELECT id, email, password, createdat, updatedat FROM users WHERE email=$1 AND password=$2", u.Email, u.Password).Scan(&u.ID, &u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 }
 

@@ -21,13 +21,14 @@ var testID = uuid.NewString()
 // Deletes all records from users table and sends GET request to /users endpoint.
 func TestEmptyTable(t *testing.T) {
 	clearTable()
-	// Generate JWT for authorization
+	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
 
 	req, _ := http.NewRequest("GET", "/users", nil)
+	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
 
@@ -110,7 +111,7 @@ func TestCreateUser(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	clearTable()
 	addUsers(1)
-	// Generate JWT for authorization
+	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
@@ -123,6 +124,7 @@ func TestUpdateUser(t *testing.T) {
 
 	var jsonStr = []byte(`{"email":"testemail1@gmail.com - updated email", "password": "password1 - updated password"}`)
 	req, _ = http.NewRequest("PUT", "/user/"+testID, bytes.NewBuffer(jsonStr))
+	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -155,23 +157,26 @@ func TestUpdateUser(t *testing.T) {
 func TestDeleteUser(t *testing.T) {
 	clearTable()
 	addUsers(1)
-	// Generate JWT for authorization
+	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
 	// Check that user exists.
 	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
+	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 	// Delete user.
 	req, _ = http.NewRequest("DELETE", "/user/"+testID, nil)
+	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 	// Check if user still exists.
 	req, _ = http.NewRequest("GET", "/user/"+uuid.NewString(), nil)
+	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusNotFound, response.Code)
@@ -187,6 +192,6 @@ func addUsers(count int) {
 
 	for i := 1; i <= count; i++ {
 		timestamp := time.Now()
-		a.DB.Exec("INSERT INTO users(id, email, password, createdat, updatedat) VALUES($1, $2, $3, $4, $5)", testID, "testemail"+strconv.Itoa(i)+"@gmail.com", "password"+strconv.Itoa(i), timestamp, timestamp)
+		d.Database.Exec("INSERT INTO users(id, email, password, createdat, updatedat) VALUES($1, $2, $3, $4, $5)", testID, "testemail"+strconv.Itoa(i)+"@gmail.com", "password"+strconv.Itoa(i), timestamp, timestamp)
 	}
 }
