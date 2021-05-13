@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/dgrijalva/jwt-go"
-	app "github.com/ebcp-dev/gorest-api/app/utils"
-	"github.com/ebcp-dev/gorest-api/db"
+	app "github.com/ebcp-dev/gorest-api/api/app/utils"
+	"github.com/ebcp-dev/gorest-api/api/db"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
