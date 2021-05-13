@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -36,8 +37,14 @@ func (a *App) Initialize() {
 	d.Initialize(db_user, db_pass, db_host, db_name)
 
 	a.Router = mux.NewRouter()
+	a.Router.HandleFunc("/", homePage)
 	a.UserInitialize()
 	a.DataInitialize()
+}
+
+// Serve homepage
+func homePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome to GoREST - API")
 }
 
 // Starts the application.
