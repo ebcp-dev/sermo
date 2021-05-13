@@ -55,11 +55,18 @@ Links:
 
 - Guides:
 
-  - Building a basic REST API with testing and CI/CD: https://semaphoreci.com/community/tutorials/building-and-testing-a-rest-api-in-go-with-gorilla-mux-and-postgresql
+  - Building a basic REST API with testing and CI/CD:
+
+    - https://semaphoreci.com/community/tutorials/building-and-testing-a-rest-api-in-go-with-gorilla-mux-and-postgresql
 
   - Authentication with JWT:
+
     - https://tutorialedge.net/golang/authenticating-golang-rest-api-with-jwts/
     - https://medium.com/swlh/building-a-user-auth-system-with-jwt-using-golang-30892659cc0
+
+  - Deployment:
+
+    - https://semaphoreci.com/community/tutorials/how-to-deploy-a-go-web-application-with-docker
 
 - Docs:
   - Syntax and convention:

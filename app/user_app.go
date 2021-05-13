@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -21,12 +20,6 @@ var mySigningKey = []byte("captainjacksparrowsayshi")
 
 // Initialize DB and routes.
 func (a *App) UserInitialize() {
-	// Receives database credentials and connects to database.
-	d.Initialize(
-		os.Getenv("APP_DB_USERNAME"),
-		os.Getenv("APP_DB_PASSWORD"),
-		os.Getenv("APP_DB_NAME"))
-
 	a.initializeUserRoutes()
 }
 

@@ -21,11 +21,19 @@ type App struct {
 
 // Initialize DB and routes.
 func (a *App) Initialize() {
+	// Get env variables.
+	db_user := os.Getenv("APP_DB_USERNAME")
+	db_pass := os.Getenv("APP_DB_PASSWORD")
+	db_host := os.Getenv("APP_DB_HOST")
+	db_name := os.Getenv("APP_DB_NAME")
+	if os.Getenv("ENV") == "prod" {
+		db_user = os.Getenv("PROD_DB_USERNAME")
+		db_pass = os.Getenv("PROD_DB_PASSWORD")
+		db_host = os.Getenv("PROD_DB_HOST")
+		db_name = os.Getenv("PROD_DB_NAME")
+	}
 	// Receives database credentials and connects to database.
-	d.Initialize(
-		os.Getenv("APP_DB_USERNAME"),
-		os.Getenv("APP_DB_PASSWORD"),
-		os.Getenv("APP_DB_NAME"))
+	d.Initialize(db_user, db_pass, db_host, db_name)
 
 	a.Router = mux.NewRouter()
 	a.UserInitialize()

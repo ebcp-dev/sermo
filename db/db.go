@@ -39,9 +39,8 @@ const DATA_SCHEMA = `
 `
 
 // Receives database credentials and connects to database.
-func (db *DB) Initialize(user, password, dbname string) {
-	connectionString :=
-		fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, password, dbname)
+func (db *DB) Initialize(user, password, dbhost, dbname string) {
+	connectionString := fmt.Sprintf("postgres://%s:%s@%s:5432/%s?sslmode=disable", user, password, dbhost, dbname)
 
 	var err error
 	db.Database, err = sql.Open("postgres", connectionString)

@@ -24,9 +24,10 @@ var testID = uuid.NewString()
 // Executes before all other tests.
 func TestMain(m *testing.M) {
 	d.Initialize(
-		os.Getenv("APP_DB_USERNAME"),
-		os.Getenv("APP_DB_PASSWORD"),
-		os.Getenv("APP_DB_NAME"))
+		os.Getenv("TEST_DB_USERNAME"),
+		os.Getenv("TEST_DB_PASSWORD"),
+		os.Getenv("TEST_DB_HOST"),
+		os.Getenv("TEST_DB_NAME"))
 	a.Initialize()
 	ensureTableExists()
 	// Executes tests.
