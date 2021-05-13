@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ebcp-dev/gorest-api/api/app"
+	"github.com/ebcp-dev/gorest-api/app"
 	"github.com/google/uuid"
 )
 

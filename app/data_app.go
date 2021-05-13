@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	app "github.com/ebcp-dev/gorest-api/api/app/utils"
-	"github.com/ebcp-dev/gorest-api/api/model"
+	app "github.com/ebcp-dev/gorest-api/app/utils"
+	"github.com/ebcp-dev/gorest-api/model"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"

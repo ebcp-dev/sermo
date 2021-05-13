@@ -7,8 +7,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ebcp-dev/gorest-api/api/app"
-	"github.com/ebcp-dev/gorest-api/api/db"
+	"github.com/ebcp-dev/gorest-api/app"
+	"github.com/ebcp-dev/gorest-api/db"
 	"github.com/google/uuid"
 )
 
