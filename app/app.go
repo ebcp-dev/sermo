@@ -11,6 +11,7 @@ import (
 	"github.com/ebcp-dev/gorest-api/db"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/spf13/viper"
 )
 
 // References DB struct in db.go.
@@ -22,17 +23,26 @@ type App struct {
 
 // Initialize DB and routes.
 func (a *App) Initialize() {
-	// Get env variables.
-	db_user := os.Getenv("APP_DB_USERNAME")
-	db_pass := os.Getenv("APP_DB_PASSWORD")
-	db_host := os.Getenv("APP_DB_HOST")
-	db_name := os.Getenv("APP_DB_NAME")
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	// Find and read the config file
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatalf("Error while reading config file %s", err)
+	}
+	// Get dev env variables.
+	db_user := viper.GetString("APP_DB_USERNAME")
+	db_pass := viper.GetString("APP_DB_PASSWORD")
+	db_host := viper.GetString("APP_DB_HOST")
+	db_name := viper.GetString("APP_DB_NAME")
+	// Production env variables.
 	if os.Getenv("ENV") == "prod" {
 		db_user = os.Getenv("PROD_DB_USERNAME")
 		db_pass = os.Getenv("PROD_DB_PASSWORD")
 		db_host = os.Getenv("PROD_DB_HOST")
 		db_name = os.Getenv("PROD_DB_NAME")
 	}
+
 	// Receives database credentials and connects to database.
 	d.Initialize(db_user, db_pass, db_host, db_name)
 
@@ -44,7 +54,12 @@ func (a *App) Initialize() {
 
 // Serve homepage
 func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome to GoREST - API")
+	current_env := os.Getenv("ENV")
+	if current_env == "" {
+		current_env = "dev"
+	}
+	fmt.Fprintln(w, "Welcome to GoREST - API")
+	fmt.Fprintf(w, "ENV: %s", current_env)
 }
 
 // Starts the application.

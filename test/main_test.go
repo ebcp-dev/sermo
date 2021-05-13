@@ -10,6 +10,7 @@ import (
 	"github.com/ebcp-dev/gorest-api/app"
 	"github.com/ebcp-dev/gorest-api/db"
 	"github.com/google/uuid"
+	"github.com/spf13/viper"
 )
 
 // References App struct in app.go.
@@ -23,11 +24,19 @@ var testID = uuid.NewString()
 
 // Executes before all other tests.
 func TestMain(m *testing.M) {
-	d.Initialize(
-		os.Getenv("TEST_DB_USERNAME"),
-		os.Getenv("TEST_DB_PASSWORD"),
-		os.Getenv("TEST_DB_HOST"),
-		os.Getenv("TEST_DB_NAME"))
+	viper.SetConfigName("config")
+	viper.AddConfigPath("../")
+	// Find and read the config file
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatalf("Error while reading config file %s", err)
+	}
+	db_user := viper.GetString("TEST_DB_USERNAME")
+	db_pass := viper.GetString("TEST_DB_PASSWORD")
+	db_host := viper.GetString("TEST_DB_HOST")
+	db_name := viper.GetString("TEST_DB_NAME")
+
+	d.Initialize(db_user, db_pass, db_host, db_name)
 	a.Initialize()
 	ensureTableExists()
 	// Executes tests.

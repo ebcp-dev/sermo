@@ -8,14 +8,16 @@ Made with:
 
 - Go
 - PostgreSQL
-- Mux
+- Mux - web framework.
   - https://github.com/gorilla/mux
+- pq - PostgreSQL driver for Go.
+  - https://github.com/lib/pq
 - JWT - used for authenticating users.
   - https://github.com/dgrijalva/jwt-go
-- pq - PosgreSQL driver for Go.
-  - https://github.com/lib/pq
-- UUID - used for parsing UUID.
+- UUID - used for parsing and storing UUID in database.
   - https://github.com/google/uuid
+- Viper - used for configuring environment variables
+  - https://github.com/spf13/viper
 - Semaphore - CI/CD
 
 ---
@@ -39,15 +41,9 @@ Routes:
   - [POST] /data (Auth required) - register data with string, int attributes
     - {strattr, intattr}
   - [GET] /data (Auth required) - retrieves list of data
-  - [PUT] /data/:id (Auth required) - update user details
+  - [PUT] /data/:id (Auth required) - update data details
     - {strattr, intattr}
   - [DELETE] /data/:id (Auth required) - delete data by id
-
----
-
-CI/CD:
-
-- Semaphore CI
 
 ---
 
@@ -67,6 +63,7 @@ Links:
   - Deployment:
 
     - https://semaphoreci.com/community/tutorials/how-to-deploy-a-go-web-application-with-docker
+    - https://towardsdatascience.com/use-environment-variable-in-your-next-golang-project-39e17c3aaa66
 
 - Docs:
   - Syntax and convention:
