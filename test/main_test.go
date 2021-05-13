@@ -9,6 +9,7 @@ import (
 
 	"github.com/ebcp-dev/gorest-api/app"
 	"github.com/ebcp-dev/gorest-api/db"
+	"github.com/google/uuid"
 )
 
 // References App struct in app.go.
@@ -16,6 +17,9 @@ var a app.App
 
 // References DB struct in app.go.
 var d db.DB
+
+//Generate new uuid for test
+var testID = uuid.NewString()
 
 // Executes before all other tests.
 func TestMain(m *testing.M) {
@@ -56,19 +60,29 @@ func ensureTableExists() {
 	}
 }
 
-// Clean test table.
+// Clean test tables.
 func clearTable() {
 	d.Database.Exec("DELETE FROM users")
+	d.Database.Exec("DELETE FROM data")
 }
 
 // SQL query to create table.
 const tableCreationQuery = `
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE TABLE IF NOT EXISTS users (
+	CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+	CREATE TABLE IF NOT EXISTS users (
+			id uuid DEFAULT uuid_generate_v4 () unique,
+			email varchar(225) NOT NULL UNIQUE,
+			password varchar(225) NOT NULL,
+			createdat timestamp NOT NULL,
+			updatedat timestamp NOT NULL,
+			primary key (id)
+	);
+	CREATE TABLE IF NOT EXISTS data (
 		id uuid DEFAULT uuid_generate_v4 () unique,
-		email varchar(225) NOT NULL UNIQUE,
-		password varchar(225) NOT NULL,
+		strattr varchar(225) NOT NULL UNIQUE,
+		intattr int NOT NULL,
 		createdat timestamp NOT NULL,
 		updatedat timestamp NOT NULL,
 		primary key (id)
-	);`
+	);
+`

@@ -9,14 +9,15 @@ import (
 	"time"
 
 	"github.com/ebcp-dev/gorest-api/app"
+	"github.com/ebcp-dev/gorest-api/model"
 	"github.com/google/uuid"
 )
 
 // Test functions
 
-// Tests response if users table is empty.
-// Deletes all records from users table and sends GET request to /users endpoint.
-func TestEmptyUserTable(t *testing.T) {
+// Tests response if data table is empty.
+// Deletes all records from data table and sends GET request to /data endpoint.
+func TestEmptyDataTable(t *testing.T) {
 	clearTable()
 	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
@@ -24,7 +25,7 @@ func TestEmptyUserTable(t *testing.T) {
 		t.Error("Failed to generate token")
 	}
 
-	req, _ := http.NewRequest("GET", "/users", nil)
+	req, _ := http.NewRequest("GET", "/data", nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -36,16 +37,16 @@ func TestEmptyUserTable(t *testing.T) {
 	}
 }
 
-// Test response if requested user is non-existent.
-// Tests if status code = 404 & response message = "User not found".
-func TestGetNonExistentUser(t *testing.T) {
+// Test response if requested data is non-existent.
+// Tests if status code = 404 & response message = "Data not found".
+func TestGetNonExistentData(t *testing.T) {
 	clearTable()
 	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
+	req, _ := http.NewRequest("GET", "/data/"+testID, nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -54,36 +55,22 @@ func TestGetNonExistentUser(t *testing.T) {
 
 	var m map[string]string
 	json.Unmarshal(response.Body.Bytes(), &m)
-	if m["error"] != "User not found" {
-		t.Errorf("Expected the 'error' key of the response to be set to 'User not found'. Got '%s'", m["error"])
+	if m["error"] != "Data not found" {
+		t.Errorf("Expected the 'error' key of the response to be set to 'Data not found'. Got '%s'", m["error"])
 	}
 }
 
-// Test response on login route.
+// Test response when fetching a specific data.
 // Tests if status code = 200.
-func TestLoginUser(t *testing.T) {
+func TestGetData(t *testing.T) {
 	clearTable()
-	addUsers(1)
-
-	var jsonStr = []byte(`{"email":"testemail1@gmail.com", "password":"password1"}`)
-	req, _ := http.NewRequest("POST", "/user/login", bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-
-	response := executeRequest(req)
-	checkResponseCode(t, http.StatusOK, response.Code)
-}
-
-// Test response when fetching a specific user.
-// Tests if status code = 200.
-func TestGetUser(t *testing.T) {
-	clearTable()
-	addUsers(1)
+	addData(1)
 	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
+	req, _ := http.NewRequest("GET", "/data/"+testID, nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -91,13 +78,29 @@ func TestGetUser(t *testing.T) {
 	checkResponseCode(t, http.StatusOK, response.Code)
 }
 
-// Test the process of creating a new user by manually adding a test user to db.
+// Test the process of creating a new data by manually adding a test data to db.
 // Tests if status code = 200 & response contains JSON object with the right contents.
-func TestCreateUser(t *testing.T) {
+func TestCreateData(t *testing.T) {
 	clearTable()
 
-	var jsonStr = []byte(`{"email":"testemail1@gmail.com", "password": "password1"}`)
-	req, _ := http.NewRequest("POST", "/user", bytes.NewBuffer(jsonStr))
+	// Generate JWT for authorization.
+	validToken, err := app.GenerateJWT()
+	if err != nil {
+		t.Error("Failed to generate token")
+	}
+
+	// var jsonStr = []byte(`{"strattr":"string1", "intattr": 1`)
+	newData := model.Data{
+		StrAttr: "string1",
+		IntAttr: 1,
+	}
+	payload, err := json.Marshal(newData)
+	if err != nil {
+		t.Error("Failed to parse JSON")
+	}
+	req, _ := http.NewRequest("POST", "/data", bytes.NewBuffer(payload))
+	// Add "Token" header to request with generated token.
+	req.Header.Add("Token", validToken)
 	req.Header.Set("Content-Type", "application/json")
 
 	response := executeRequest(req)
@@ -106,34 +109,34 @@ func TestCreateUser(t *testing.T) {
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
 
-	if m["email"] != "testemail1@gmail.com" {
-		t.Errorf("Expected user email to be 'testemail1@gmail.com'. Got '%v'", m["email"])
+	if m["strattr"] != "string1" {
+		t.Errorf("Expected data strattr to be 'string1'. Got '%v'", m["strattr"])
 	}
-
-	if m["password"] != "password1" {
-		t.Errorf("Expected user password to be 'password1'. Got '%v'", m["password"])
+	// Convert 1 to float64 because Go maps convert int values to float64.
+	if m["intattr"] != float64(1) {
+		t.Errorf("Expected data intattr to be 1. Got '%v'", m["intattr"])
 	}
 }
 
-// Test process of updating a user.
+// Test process of updating a data.
 // Tests if status code = 200 & response contains JSON object with the updated contents.
-func TestUpdateUser(t *testing.T) {
+func TestUpdateData(t *testing.T) {
 	clearTable()
-	addUsers(1)
+	addData(1)
 	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
+	req, _ := http.NewRequest("GET", "/data/"+testID, nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
-	var originalUser map[string]interface{}
-	json.Unmarshal(response.Body.Bytes(), &originalUser)
+	var originalData map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &originalData)
 
-	var jsonStr = []byte(`{"email":"testemail1@gmail.com - updated email", "password": "password1 - updated password"}`)
-	req, _ = http.NewRequest("PUT", "/user/"+testID, bytes.NewBuffer(jsonStr))
+	var jsonStr = []byte(`{"strattr":"string1 - updated strattr", "intattr": 2}`)
+	req, _ = http.NewRequest("PUT", "/data/"+testID, bytes.NewBuffer(jsonStr))
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	req.Header.Set("Content-Type", "application/json")
@@ -145,43 +148,43 @@ func TestUpdateUser(t *testing.T) {
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
 
-	if m["id"] != originalUser["id"] {
-		t.Errorf("Expected the id to remain the same (%v). Got %v", originalUser["id"], m["id"])
+	if m["id"] != originalData["id"] {
+		t.Errorf("Expected the id to remain the same (%v). Got %v", originalData["id"], m["id"])
 	}
 
-	if m["email"] == originalUser["email"] {
-		t.Errorf("Expected the email to change from '%v' to '%v'. Got '%v'", originalUser["email"], m["email"], m["email"])
+	if m["strattr"] == originalData["strattr"] {
+		t.Errorf("Expected the strattr to change from '%v' to '%v'. Got '%v'", originalData["strattr"], m["strattr"], m["strattr"])
 	}
 
-	if m["password"] == originalUser["password"] {
-		t.Errorf("Expected the password to change from '%v' to '%v'. Got '%v'", originalUser["password"], m["password"], m["password"])
+	if m["intattr"] == originalData["intattr"] {
+		t.Errorf("Expected the intattr to change from '%v' to '%v'. Got '%v'", originalData["intattr"], m["intattr"], m["intattr"])
 	}
 }
 
-// Test process of deleting users.
+// Test process of deleting data.
 // Tests if status code = 200.
-func TestDeleteUser(t *testing.T) {
+func TestDeleteData(t *testing.T) {
 	clearTable()
-	addUsers(1)
+	addData(1)
 	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	// Check that user exists.
-	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
+	// Check that data exists.
+	req, _ := http.NewRequest("GET", "/data/"+testID, nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
-	// Delete user.
-	req, _ = http.NewRequest("DELETE", "/user/"+testID, nil)
+	// Delete data.
+	req, _ = http.NewRequest("DELETE", "/data/"+testID, nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
-	// Check if user still exists.
-	req, _ = http.NewRequest("GET", "/user/"+uuid.NewString(), nil)
+	// Check if data still exists.
+	req, _ = http.NewRequest("GET", "/data/"+uuid.NewString(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)
@@ -191,13 +194,13 @@ func TestDeleteUser(t *testing.T) {
 // Helper functions
 
 // Adds 1 or more records to table for testing.
-func addUsers(count int) {
+func addData(count int) {
 	if count < 1 {
 		count = 1
 	}
 
 	for i := 1; i <= count; i++ {
 		timestamp := time.Now()
-		d.Database.Exec("INSERT INTO users(id, email, password, createdat, updatedat) VALUES($1, $2, $3, $4, $5)", testID, "testemail"+strconv.Itoa(i)+"@gmail.com", "password"+strconv.Itoa(i), timestamp, timestamp)
+		d.Database.Exec("INSERT INTO data(id, strattr, intattr, createdat, updatedat) VALUES($1, $2, $3, $4, $5)", testID, "string"+strconv.Itoa(i), i, timestamp, timestamp)
 	}
 }

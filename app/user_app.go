@@ -3,7 +3,6 @@ package app
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -28,19 +27,18 @@ func (a *App) UserInitialize() {
 		os.Getenv("APP_DB_PASSWORD"),
 		os.Getenv("APP_DB_NAME"))
 
-	a.Router = mux.NewRouter()
-	a.initializeRoutes()
+	a.initializeUserRoutes()
 }
 
 // Defines routes.
-func (a *App) initializeRoutes() {
+func (a *App) initializeUserRoutes() {
 	a.Router.HandleFunc("/user", a.createUser).Methods("POST")
 	a.Router.HandleFunc("/user/login", a.loginUser).Methods("POST")
-	a.Router.HandleFunc("/user/{id}", a.getUser).Methods("GET")
 	// Authorized routes.
-	a.Router.Handle("/users", isAuthorized(a.getUsers)).Methods("GET")
-	a.Router.Handle("/user/{id}", isAuthorized(a.updateUser)).Methods("PUT")
-	a.Router.Handle("/user/{id}", isAuthorized(a.deleteUser)).Methods("DELETE")
+	a.Router.Handle("/user/{id}", a.isAuthorized(a.getUser)).Methods("GET")
+	a.Router.Handle("/users", a.isAuthorized(a.getUsers)).Methods("GET")
+	a.Router.Handle("/user/{id}", a.isAuthorized(a.updateUser)).Methods("PUT")
+	a.Router.Handle("/user/{id}", a.isAuthorized(a.deleteUser)).Methods("DELETE")
 }
 
 // Route handlers
@@ -194,32 +192,6 @@ func (a *App) deleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // Helper functions
-
-// Authorization middleware
-func isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check if request has "Token" header.
-		if r.Header["Token"] != nil {
-			token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
-				// Check if token is valid based on private `mySigningKey`.
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, fmt.Errorf("There was an error")
-				}
-				return mySigningKey, nil
-			})
-
-			if err != nil {
-				app.RespondWithError(w, http.StatusInternalServerError, err.Error())
-			}
-			// Serve endpoint if token is valid.
-			if token.Valid {
-				endpoint(w, r)
-			}
-		} else {
-			app.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
-		}
-	})
-}
 
 // Generate JWT
 func GenerateJWT() (string, error) {

@@ -23,6 +23,7 @@ Made with:
 Routes:
 
 - User routes:
+
   - [POST] /user - register user with email, password
     - {email, password}
   - [POST] /user/login - user login with email, password
@@ -32,6 +33,15 @@ Routes:
   - [PUT] /user/:id (Auth required) - update user details
     - {email, password}
   - [DELETE] /user/:id (Auth required) - delete user by id
+
+- Data routes:
+  - [GET] /data/:id - retrieves a specific data
+  - [POST] /data (Auth required) - register data with string, int attributes
+    - {strattr, intattr}
+  - [GET] /data (Auth required) - retrieves list of data
+  - [PUT] /data/:id (Auth required) - update user details
+    - {strattr, intattr}
+  - [DELETE] /data/:id (Auth required) - delete data by id
 
 ---
 
