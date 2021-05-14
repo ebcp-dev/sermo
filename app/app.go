@@ -30,7 +30,7 @@ func (a *App) Initialize() {
 	if err != nil {
 		log.Fatalf("Error while reading config file %s", err)
 	}
-	// Get dev env variables.
+	// Default is ENV=dev.
 	db_user := viper.GetString("APP_DB_USERNAME")
 	db_pass := viper.GetString("APP_DB_PASSWORD")
 	db_host := viper.GetString("APP_DB_HOST")

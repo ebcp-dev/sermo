@@ -18,6 +18,7 @@ Made with:
   - https://github.com/google/uuid
 - Viper - used for configuring environment variables
   - https://github.com/spf13/viper
+- Docker
 - Semaphore - CI/CD
 
 ---
@@ -61,7 +62,7 @@ Links:
     - https://medium.com/swlh/building-a-user-auth-system-with-jwt-using-golang-30892659cc0
 
   - Deployment:
-
+    - https://tutorialedge.net/golang/go-docker-tutorial/
     - https://semaphoreci.com/community/tutorials/how-to-deploy-a-go-web-application-with-docker
     - https://towardsdatascience.com/use-environment-variable-in-your-next-golang-project-39e17c3aaa66
 
