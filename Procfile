@@ -1,1 +1,1 @@
-web: bin/src --log-file - --log-level debug
+web: go run main.go --log-file - --log-level debug
