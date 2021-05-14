@@ -1,1 +1,1 @@
-web: go run main.go --log-file - --log-level debug
+web: gorest-api --log-file - --log-level debug
