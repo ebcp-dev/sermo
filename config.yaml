@@ -7,3 +7,5 @@ TEST_DB_USERNAME: 'postgres'
 TEST_DB_PASSWORD: ''
 TEST_DB_NAME: 'postgres'
 TEST_DB_HOST: 'localhost'
+
+PORT: '8010'
