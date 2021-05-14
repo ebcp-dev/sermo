@@ -1,0 +1,1 @@
+web: bin/src --log-file - --log-level debug
