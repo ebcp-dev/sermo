@@ -1,4 +1,4 @@
-module github.com/ebcp-dev/gorest-api
+module github.com/ebcp-dev/sermo
 
 go 1.16
 
@@ -7,5 +7,5 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.1
-	github.com/spf13/viper v1.7.1 // indirect
+	github.com/spf13/viper v1.7.1
 )

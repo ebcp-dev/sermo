@@ -57,5 +57,5 @@ blocks:
       jobs:
         - name: go build
           commands:
-            - go build -v -o gorest-api.bin
-            - artifact push project --force gorest-api.bin
+            - go build -v -o sermo.bin
+            - artifact push project --force sermo.bin

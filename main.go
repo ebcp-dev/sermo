@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ebcp-dev/gorest-api/app"
+	"github.com/ebcp-dev/sermo/app"
 	"github.com/spf13/viper"
 )
 

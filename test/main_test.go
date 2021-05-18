@@ -7,8 +7,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ebcp-dev/gorest-api/app"
-	"github.com/ebcp-dev/gorest-api/db"
+	"github.com/ebcp-dev/sermo/app"
+	"github.com/ebcp-dev/sermo/db"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )

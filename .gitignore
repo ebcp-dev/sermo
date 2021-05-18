@@ -5,12 +5,9 @@
 *.so
 *.dylib
 
-<<<<<<< HEAD
-=======
 # ENV variables
 *.env
 
->>>>>>> f906fd7207beef363673f743b8acb14b6edee0dc
 # Test binary, built with `go test -c`
 *.test
 

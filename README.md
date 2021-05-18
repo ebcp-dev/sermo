@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-# sermo
-A light chat server made with Go.
-=======
-## GO REST API
+## Sermo
 
 A REST API written in Go with a PostgreSQL database and JWT authentication.
-
-[![Build Status](https://ebcp-dev.semaphoreci.com/badges/gorest-api/branches/master.svg)](https://ebcp-dev.semaphoreci.com/projects/gorest-api)
 
 Made with:
 
@@ -75,4 +69,3 @@ Links:
     - https://golang.org/doc/effective_go
     - https://medium.com/@kdnotes/golang-naming-rules-and-conventions-8efeecd23b68
     - https://devhints.io/go
->>>>>>> f906fd7207beef363673f743b8acb14b6edee0dc

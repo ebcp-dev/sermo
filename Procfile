@@ -1,1 +1,1 @@
-web: gorest-api --log-file - --log-level debug
+web: sermo --log-file - --log-level debug

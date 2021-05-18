@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	app "github.com/ebcp-dev/gorest-api/app/utils"
-	"github.com/ebcp-dev/gorest-api/model"
+	app "github.com/ebcp-dev/sermo/app/utils"
+	"github.com/ebcp-dev/sermo/model"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"

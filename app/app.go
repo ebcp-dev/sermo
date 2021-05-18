@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/dgrijalva/jwt-go"
-	app "github.com/ebcp-dev/gorest-api/app/utils"
-	"github.com/ebcp-dev/gorest-api/db"
+	app "github.com/ebcp-dev/sermo/app/utils"
+	"github.com/ebcp-dev/sermo/db"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
@@ -58,7 +58,7 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 	if current_env == "" {
 		current_env = "dev"
 	}
-	fmt.Fprintln(w, "Welcome to GoREST - API")
+	fmt.Fprintln(w, "Welcome to Sermo - API")
 	fmt.Fprintf(w, "ENV: %s", current_env)
 }
 
