@@ -1,0 +1,1 @@
+web: gorest-api --log-file - --log-level debug
