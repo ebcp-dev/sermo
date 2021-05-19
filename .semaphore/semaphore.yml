@@ -34,7 +34,7 @@ blocks:
           - checkout
           - 'cache restore '
           - go mod vendor
-          - source env-sample
+          - source env-semaphore
       jobs:
         - name: go test
           commands:
@@ -53,7 +53,7 @@ blocks:
           - checkout
           - 'cache restore '
           - go mod vendor
-          - source env-sample
+          - source env-semaphore
       jobs:
         - name: go build
           commands:

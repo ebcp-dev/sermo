@@ -10,6 +10,8 @@ Made with:
 - PostgreSQL
 - Mux - web framework.
   - https://github.com/gorilla/mux
+- Gorilla WebSocket - WebSocket implementation in Go.
+  - https://github.com/gorilla/websocket
 - pq - PostgreSQL driver for Go.
   - https://github.com/lib/pq
 - JWT - used for authenticating users.
