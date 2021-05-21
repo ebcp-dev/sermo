@@ -3,7 +3,9 @@ package app
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -16,7 +18,7 @@ import (
 )
 
 // Used for validating header tokens.
-var mySigningKey = []byte("captainjacksparrowsayshi")
+var mySigningKey = []byte("sermoapisigningkey")
 
 // Initialize DB and routes.
 func (a *App) UserInitialize() {
@@ -25,6 +27,7 @@ func (a *App) UserInitialize() {
 
 // Defines routes.
 func (a *App) initializeUserRoutes() {
+	a.Router.HandleFunc("/user", a.userHome).Methods("GET")
 	a.Router.HandleFunc("/user", a.createUser).Methods("POST")
 	a.Router.HandleFunc("/user/login", a.loginUser).Methods("POST")
 	// Authorized routes.
@@ -35,6 +38,16 @@ func (a *App) initializeUserRoutes() {
 }
 
 // Route handlers
+
+// Serve homepage
+func (a *App) userHome(w http.ResponseWriter, r *http.Request) {
+	current_env := os.Getenv("ENV")
+	if current_env == "" {
+		current_env = "dev"
+	}
+	fmt.Fprintln(w, "Welcome to Sermo's - Users API")
+	fmt.Fprintf(w, "ENV: %s", current_env)
+}
 
 // Retrieves user from db using id from URL.
 func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +91,7 @@ func (a *App) getUser(w http.ResponseWriter, r *http.Request) {
 		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
-	u := model.User{ID: id}
+	u := model.User{UserID: id}
 	if err := u.GetUser(d.Database); err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -156,7 +169,7 @@ func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer r.Body.Close()
-	u.ID = id
+	u.UserID = id
 
 	if err := u.UpdateUser(d.Database); err != nil {
 		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
@@ -175,7 +188,7 @@ func (a *App) deleteUser(w http.ResponseWriter, r *http.Request) {
 		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
-	u := model.User{ID: id}
+	u := model.User{UserID: id}
 	if err := u.DeleteUser(d.Database); err != nil {
 		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ebcp-dev/sermo/app"
-	"github.com/google/uuid"
 )
 
 // Test functions
@@ -45,7 +44,7 @@ func TestGetNonExistentUser(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
+	req, _ := http.NewRequest("GET", "/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -83,7 +82,7 @@ func TestGetUser(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
+	req, _ := http.NewRequest("GET", "/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -125,7 +124,7 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
+	req, _ := http.NewRequest("GET", "/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -133,7 +132,7 @@ func TestUpdateUser(t *testing.T) {
 	json.Unmarshal(response.Body.Bytes(), &originalUser)
 
 	var jsonStr = []byte(`{"email":"testemail1@gmail.com - updated email", "password": "password1 - updated password"}`)
-	req, _ = http.NewRequest("PUT", "/user/"+testID, bytes.NewBuffer(jsonStr))
+	req, _ = http.NewRequest("PUT", "/user/"+userTestID.String(), bytes.NewBuffer(jsonStr))
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	req.Header.Set("Content-Type", "application/json")
@@ -145,8 +144,8 @@ func TestUpdateUser(t *testing.T) {
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
 
-	if m["id"] != originalUser["id"] {
-		t.Errorf("Expected the id to remain the same (%v). Got %v", originalUser["id"], m["id"])
+	if m["userid"] != originalUser["userid"] {
+		t.Errorf("Expected the userid to remain the same (%v). Got %v", originalUser["userid"], m["userid"])
 	}
 
 	if m["email"] == originalUser["email"] {
@@ -169,19 +168,19 @@ func TestDeleteUser(t *testing.T) {
 		t.Error("Failed to generate token")
 	}
 	// Check that user exists.
-	req, _ := http.NewRequest("GET", "/user/"+testID, nil)
+	req, _ := http.NewRequest("GET", "/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 	// Delete user.
-	req, _ = http.NewRequest("DELETE", "/user/"+testID, nil)
+	req, _ = http.NewRequest("DELETE", "/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 	// Check if user still exists.
-	req, _ = http.NewRequest("GET", "/user/"+uuid.NewString(), nil)
+	req, _ = http.NewRequest("GET", "/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)
@@ -198,6 +197,6 @@ func addUsers(count int) {
 
 	for i := 1; i <= count; i++ {
 		timestamp := time.Now()
-		d.Database.Exec("INSERT INTO users(id, email, password, createdat, updatedat) VALUES($1, $2, $3, $4, $5)", testID, "testemail"+strconv.Itoa(i)+"@gmail.com", "password"+strconv.Itoa(i), timestamp, timestamp)
+		d.Database.Exec("INSERT INTO users(userid, email, password, createdat, updatedat) VALUES($1, $2, $3, $4, $5)", userTestID, "testemail"+strconv.Itoa(i)+"@gmail.com", "password"+strconv.Itoa(i), timestamp, timestamp)
 	}
 }

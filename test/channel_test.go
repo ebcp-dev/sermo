@@ -10,14 +10,13 @@ import (
 
 	"github.com/ebcp-dev/sermo/app"
 	"github.com/ebcp-dev/sermo/model"
-	"github.com/google/uuid"
 )
 
 // Test functions
 
-// Tests response if data table is empty.
-// Deletes all records from data table and sends GET request to /data endpoint.
-func TestEmptyDataTable(t *testing.T) {
+// Tests response if channel table is empty.
+// Deletes all records from channel table and sends GET request to /channel endpoint.
+func TestEmptyChannelTable(t *testing.T) {
 	clearTable()
 	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
@@ -25,7 +24,7 @@ func TestEmptyDataTable(t *testing.T) {
 		t.Error("Failed to generate token")
 	}
 
-	req, _ := http.NewRequest("GET", "/data", nil)
+	req, _ := http.NewRequest("GET", "/channels", nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -37,16 +36,16 @@ func TestEmptyDataTable(t *testing.T) {
 	}
 }
 
-// Test response if requested data is non-existent.
-// Tests if status code = 404 & response message = "Data not found".
-func TestGetNonExistentData(t *testing.T) {
+// Test response if requested channel is non-existent.
+// Tests if status code = 404 & response message = "Channel not found".
+func TestGetNonExistentChannel(t *testing.T) {
 	clearTable()
 	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/data/"+testID, nil)
+	req, _ := http.NewRequest("GET", "/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -55,22 +54,23 @@ func TestGetNonExistentData(t *testing.T) {
 
 	var m map[string]string
 	json.Unmarshal(response.Body.Bytes(), &m)
-	if m["error"] != "Data not found" {
-		t.Errorf("Expected the 'error' key of the response to be set to 'Data not found'. Got '%s'", m["error"])
+	if m["error"] != "Channel not found" {
+		t.Errorf("Expected the 'error' key of the response to be set to 'Channel not found'. Got '%s'", m["error"])
 	}
 }
 
-// Test response when fetching a specific data.
+// Test response when fetching a specific channel.
 // Tests if status code = 200.
-func TestGetData(t *testing.T) {
+func TestGetChannel(t *testing.T) {
 	clearTable()
-	addData(1)
+	addChannel(1)
 	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/data/"+testID, nil)
+
+	req, _ := http.NewRequest("GET", "/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -78,27 +78,29 @@ func TestGetData(t *testing.T) {
 	checkResponseCode(t, http.StatusOK, response.Code)
 }
 
-// Test the process of creating a new data by manually adding a test data to db.
+// Test the process of creating a new channel by manually adding a test channel to db.
 // Tests if status code = 200 & response contains JSON object with the right contents.
-func TestCreateData(t *testing.T) {
+func TestCreateChannel(t *testing.T) {
 	clearTable()
-
+	// Create new user for foreign key constraint.
+	addUsers(1)
 	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
 
-	// var jsonStr = []byte(`{"strattr":"string1", "intattr": 1`)
-	newData := model.Data{
-		StrAttr: "string1",
-		IntAttr: 1,
+	// var jsonStr = []byte(`{"channelname":"channel1", "maxpopulation": 1`)
+	newChannel := model.Channel{
+		ChannelName:   "channel1",
+		MaxPopulation: 1,
+		UserID:        userTestID,
 	}
-	payload, err := json.Marshal(newData)
+	payload, err := json.Marshal(newChannel)
 	if err != nil {
 		t.Error("Failed to parse JSON")
 	}
-	req, _ := http.NewRequest("POST", "/data", bytes.NewBuffer(payload))
+	req, _ := http.NewRequest("POST", "/channel", bytes.NewBuffer(payload))
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	req.Header.Set("Content-Type", "application/json")
@@ -109,34 +111,35 @@ func TestCreateData(t *testing.T) {
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
 
-	if m["strattr"] != "string1" {
-		t.Errorf("Expected data strattr to be 'string1'. Got '%v'", m["strattr"])
+	if m["channelname"] != "channel1" {
+		t.Log(m["channelname"])
+		t.Errorf("Expected channel channelname to be 'channel1'. Got '%v'", m["channelname"])
 	}
 	// Convert 1 to float64 because Go maps convert int values to float64.
-	if m["intattr"] != float64(1) {
-		t.Errorf("Expected data intattr to be 1. Got '%v'", m["intattr"])
+	if m["maxpopulation"] != float64(1) {
+		t.Errorf("Expected channel maxpopulation to be 1. Got '%v'", m["maxpopulation"])
 	}
 }
 
-// Test process of updating a data.
+// Test process of updating a channel.
 // Tests if status code = 200 & response contains JSON object with the updated contents.
-func TestUpdateData(t *testing.T) {
+func TestUpdateChannel(t *testing.T) {
 	clearTable()
-	addData(1)
+	addChannel(1)
 	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/data/"+testID, nil)
+	req, _ := http.NewRequest("GET", "/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
-	var originalData map[string]interface{}
-	json.Unmarshal(response.Body.Bytes(), &originalData)
+	var originalChannel map[string]interface{}
+	json.Unmarshal(response.Body.Bytes(), &originalChannel)
 
-	var jsonStr = []byte(`{"strattr":"string1 - updated strattr", "intattr": 2}`)
-	req, _ = http.NewRequest("PUT", "/data/"+testID, bytes.NewBuffer(jsonStr))
+	var jsonStr = []byte(`{"channelname":"channel1 - updated", "maxpopulation": 2}`)
+	req, _ = http.NewRequest("PUT", "/channel/"+channelTestID.String(), bytes.NewBuffer(jsonStr))
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	req.Header.Set("Content-Type", "application/json")
@@ -148,43 +151,43 @@ func TestUpdateData(t *testing.T) {
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
 
-	if m["id"] != originalData["id"] {
-		t.Errorf("Expected the id to remain the same (%v). Got %v", originalData["id"], m["id"])
+	if m["channelid"] != originalChannel["channelid"] {
+		t.Errorf("Expected the channelid to remain the same (%v). Got %v", originalChannel["channelid"], m["channelid"])
 	}
 
-	if m["strattr"] == originalData["strattr"] {
-		t.Errorf("Expected the strattr to change from '%v' to '%v'. Got '%v'", originalData["strattr"], m["strattr"], m["strattr"])
+	if m["channelname"] == originalChannel["channelname"] {
+		t.Errorf("Expected the channelname to change from '%v' to '%v'. Got '%v'", originalChannel["channelname"], m["channelname"], m["channelname"])
 	}
 
-	if m["intattr"] == originalData["intattr"] {
-		t.Errorf("Expected the intattr to change from '%v' to '%v'. Got '%v'", originalData["intattr"], m["intattr"], m["intattr"])
+	if m["maxpopulation"] == originalChannel["maxpopulation"] {
+		t.Errorf("Expected the maxpopulation to change from '%v' to '%v'. Got '%v'", originalChannel["maxpopulation"], m["maxpopulation"], m["maxpopulation"])
 	}
 }
 
-// Test process of deleting data.
+// Test process of deleting channel.
 // Tests if status code = 200.
-func TestDeleteData(t *testing.T) {
+func TestDeleteChannel(t *testing.T) {
 	clearTable()
-	addData(1)
+	addChannel(1)
 	// Generate JWT for authorization.
 	validToken, err := app.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	// Check that data exists.
-	req, _ := http.NewRequest("GET", "/data/"+testID, nil)
+	// Check that channel exists.
+	req, _ := http.NewRequest("GET", "/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
-	// Delete data.
-	req, _ = http.NewRequest("DELETE", "/data/"+testID, nil)
+	// Delete channel.
+	req, _ = http.NewRequest("DELETE", "/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
-	// Check if data still exists.
-	req, _ = http.NewRequest("GET", "/data/"+uuid.NewString(), nil)
+	// Check if channel still exists.
+	req, _ = http.NewRequest("GET", "/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)
@@ -194,13 +197,16 @@ func TestDeleteData(t *testing.T) {
 // Helper functions
 
 // Adds 1 or more records to table for testing.
-func addData(count int) {
+func addChannel(count int) {
+	timestamp := time.Now()
 	if count < 1 {
 		count = 1
 	}
 
+	// Create new user for foreign key constraint.
+	addUsers(1)
+
 	for i := 1; i <= count; i++ {
-		timestamp := time.Now()
-		d.Database.Exec("INSERT INTO data(id, strattr, intattr, createdat, updatedat) VALUES($1, $2, $3, $4, $5)", testID, "string"+strconv.Itoa(i), i, timestamp, timestamp)
+		d.Database.Exec("INSERT INTO channels(channelid, channelname, maxpopulation, userid, createdat, updatedat) VALUES($1, $2, $3, $4, $5, $6)", channelTestID, "channel"+strconv.Itoa(i), i, userTestID, timestamp, timestamp)
 	}
 }

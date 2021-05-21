@@ -23,9 +23,9 @@ type App struct {
 
 // Initialize DB and routes.
 func (a *App) Initialize() {
+	// Find and read the config file.
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
-	// Find and read the config file
 	err := viper.ReadInConfig()
 	if err != nil {
 		log.Fatalf("Error while reading config file %s", err)
@@ -46,10 +46,15 @@ func (a *App) Initialize() {
 	// Receives database credentials and connects to database.
 	d.Initialize(db_user, db_pass, db_host, db_name)
 
+	// Initialize mux router.
 	a.Router = mux.NewRouter()
+
+	// Handle home page.
 	a.Router.HandleFunc("/", homePage)
+
+	// Initialize other app routes.
 	a.UserInitialize()
-	a.DataInitialize()
+	a.ChannelInitialize()
 }
 
 // Serve homepage

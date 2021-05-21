@@ -17,24 +17,27 @@ const DB_SETUP = `
 // Schema for user table.
 const USER_SCHEMA = `
 	CREATE TABLE IF NOT EXISTS users (
-		id uuid DEFAULT uuid_generate_v4 () unique,
-		email varchar(225) NOT NULL UNIQUE,
-		password varchar(225) NOT NULL,
+		userid UUID DEFAULT uuid_generate_v4 () UNIQUE,
+		email VARCHAR(90) NOT NULL UNIQUE,
+		password VARCHAR(100) NOT NULL,
 		createdat timestamp NOT NULL,
 		updatedat timestamp NOT NULL,
-		primary key (id)
+		PRIMARY KEY (userid)
 	);
 `
 
 // Schema for data table.
-const DATA_SCHEMA = `
-	CREATE TABLE IF NOT EXISTS data (
-		id uuid DEFAULT uuid_generate_v4 () unique,
-		strattr varchar(225) NOT NULL UNIQUE,
-		intattr int NOT NULL,
+const CHANNEL_SCHEMA = `
+	CREATE TABLE IF NOT EXISTS channels (
+		channelid UUID DEFAULT uuid_generate_v4 () UNIQUE,
+		channelname VARCHAR(20) NOT NULL UNIQUE,
+		maxpopulation int NOT NULL DEFAULT 1,
 		createdat timestamp NOT NULL,
 		updatedat timestamp NOT NULL,
-		primary key (id)
+		userid UUID NOT NULL,
+		PRIMARY KEY (channelid),
+		CONSTRAINT fk_user FOREIGN KEY (userid) 
+			REFERENCES users(userid) ON DELETE CASCADE
 	);
 `
 
@@ -50,5 +53,5 @@ func (db *DB) Initialize(user, password, dbhost, dbname string) {
 	}
 	db.Database.Exec(DB_SETUP)
 	db.Database.Exec(USER_SCHEMA)
-	db.Database.Exec(DATA_SCHEMA)
+	db.Database.Exec(CHANNEL_SCHEMA)
 }

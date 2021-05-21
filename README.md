@@ -39,14 +39,14 @@ Routes:
     - {email, password}
   - [DELETE] /user/:id (Auth required) - delete user by id
 
-- Data routes:
-  - [GET] /data/:id - retrieves a specific data
-  - [POST] /data (Auth required) - register data with string, int attributes
+- Channel routes:
+  - [GET] /channel/:id - retrieves a specific channel
+  - [POST] /channel (Auth required) - register channel with string, int attributes
+    - {channelname, maxpopulation}
+  - [GET] /channel (Auth required) - retrieves list of channel
+  - [PUT] /channel/:id (Auth required) - update channel details
     - {strattr, intattr}
-  - [GET] /data (Auth required) - retrieves list of data
-  - [PUT] /data/:id (Auth required) - update data details
-    - {strattr, intattr}
-  - [DELETE] /data/:id (Auth required) - delete data by id
+  - [DELETE] /channel/:id (Auth required) - delete channel by id
 
 ---
 
