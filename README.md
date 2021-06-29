@@ -54,6 +54,13 @@ Links:
 
 - Guides:
 
+  - Go WebRTC:
+
+    - https://medium.com/@ramezemadaiesec/from-zero-to-fully-functional-video-conference-app-using-go-and-webrtc-7d073c9287da
+    - https://github.com/pion/webrtc/blob/master/examples/README.md
+    - https://github.com/pion/example-webrtc-applications
+    - https://webrtcforthecurious.com/
+
   - Building a basic REST API with testing and CI/CD:
 
     - https://semaphoreci.com/community/tutorials/building-and-testing-a-rest-api-in-go-with-gorilla-mux-and-postgresql
@@ -73,3 +80,8 @@ Links:
     - https://golang.org/doc/effective_go
     - https://medium.com/@kdnotes/golang-naming-rules-and-conventions-8efeecd23b68
     - https://devhints.io/go
+
+Known Issues:
+
+- Update query goes through even if id doesn't exist.
+- Delete query goes through even if id doesn't exist.

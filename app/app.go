@@ -55,6 +55,7 @@ func (a *App) Initialize() {
 	// Initialize other app routes.
 	a.UserInitialize()
 	a.ChannelInitialize()
+	a.SignalInitialize()
 }
 
 // Serve homepage

@@ -15,12 +15,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/spf13/viper"
 )
 
 // Used for validating header tokens.
-var mySigningKey = []byte("sermoapisigningkey")
+var mySigningKey = []byte(viper.GetString("SIGNING_KEY"))
 
-// Initialize DB and routes.
+// Initialize routes.
 func (a *App) UserInitialize() {
 	a.initializeUserRoutes()
 }
@@ -206,8 +207,12 @@ func GenerateJWT() (string, error) {
 	claims := token.Claims.(jwt.MapClaims)
 
 	claims["authorized"] = true
-	claims["client"] = "Elliot Forbes"
+	claims["client"] = "sermoapi"
 	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+
+	if os.Getenv("ENV") == "prod" {
+		mySigningKey = []byte(os.Getenv("SIGNING_KEY"))
+	}
 
 	tokenString, err := token.SignedString(mySigningKey)
 
