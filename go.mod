@@ -1,5 +1,6 @@
 module github.com/ebcp-dev/sermo
 
+// +heroku goVersion go1.16
 go 1.16
 
 require (
