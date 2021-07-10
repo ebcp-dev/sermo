@@ -1,17 +1,21 @@
 ## Sermo
 
-A chat server written in Go with Gorilla WebSocket and JWT authentication.
+A chat server written in Go using Pion WebRTC and JWT authentication.
 
 [![Build Status](https://ebcp-dev.semaphoreci.com/badges/sermo/branches/master.svg?style=shields&key=eeebee0b-69c4-4904-9e70-dc9c7e8f6ffd)](https://ebcp-dev.semaphoreci.com/projects/sermo)
 
 Made with:
 
-- Go
+- Go 1.16
 - PostgreSQL
 - Mux - web framework.
   - https://github.com/gorilla/mux
 - Gorilla WebSocket - WebSocket implementation in Go.
   - https://github.com/gorilla/websocket
+- Pion WebRTC (v3) - WebRTC implementation in Go.
+  - https://github.com/pion
+- Pion RTCP - RTCP implementation in Go.
+  - https://github.com/rtcp
 - pq - PostgreSQL driver for Go.
   - https://github.com/lib/pq
 - JWT - used for authenticating users.

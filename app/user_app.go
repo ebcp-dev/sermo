@@ -7,21 +7,15 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 
-	"github.com/dgrijalva/jwt-go"
-	app "github.com/ebcp-dev/sermo/app/utils"
-	"github.com/ebcp-dev/sermo/model"
+	utils "github.com/ebcp-dev/sermo/app/utils"
+	model "github.com/ebcp-dev/sermo/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
-	"github.com/spf13/viper"
 )
 
-// Used for validating header tokens.
-var mySigningKey = []byte(viper.GetString("SIGNING_KEY"))
-
-// Initialize routes.
+// Initialize User API.
 func (a *App) UserInitialize() {
 	a.initializeUserRoutes()
 }
@@ -56,31 +50,37 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 	// Gets JSON object from request body.
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&u); err != nil {
-		app.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
+	passwordInput := u.Password
 
 	defer r.Body.Close()
-	// Find user in db with email and password from request body.
-	if err := u.GetUserByEmailAndPassword(d.Database); err != nil {
+	// Find user in db with email from request body.
+	if err := u.GetUserByEmail(d.Database); err != nil {
 		switch err {
 		case sql.ErrNoRows:
 			// Respond with 404 if user not found in db.
-			app.RespondWithError(w, http.StatusNotFound, "User not found")
+			utils.RespondWithError(w, http.StatusNotFound, "User not found.")
 		default:
 			// Respond if internal server error.
-			app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		}
+	}
+	if !utils.ComparePasswords(u.Password, []byte(passwordInput)) {
+		// Respond with 401 if hashed passwords don't match.
+		utils.RespondWithError(w, http.StatusUnauthorized, "Invalid login.")
 		return
 	}
 	// Generate and send token to client with response header.
-	validToken, err := GenerateJWT()
+	validToken, err := utils.GenerateJWT()
 	if err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 	w.Header().Add("Token", validToken)
 	// Respond with user in db.
-	app.RespondWithJSON(w, http.StatusOK, u)
+	utils.RespondWithJSON(w, http.StatusOK, u)
 }
 
 // Retrieves user from db using id from URL.
@@ -89,7 +89,8 @@ func (a *App) getUser(w http.ResponseWriter, r *http.Request) {
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	u := model.User{UserID: id}
@@ -97,15 +98,15 @@ func (a *App) getUser(w http.ResponseWriter, r *http.Request) {
 		switch err {
 		case sql.ErrNoRows:
 			// Respond with 404 if user not found in db.
-			app.RespondWithError(w, http.StatusNotFound, "User not found")
+			utils.RespondWithError(w, http.StatusNotFound, "User not found")
 		default:
 			// Respond if internal server error.
-			app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
 	// If user found respond with user object.
-	app.RespondWithJSON(w, http.StatusOK, u)
+	utils.RespondWithJSON(w, http.StatusOK, u)
 }
 
 // Gets list of user with count and start variables from URL.
@@ -125,11 +126,11 @@ func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
 
 	users, err := model.GetUsers(d.Database, start, count)
 	if err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	app.RespondWithJSON(w, http.StatusOK, users)
+	utils.RespondWithJSON(w, http.StatusOK, users)
 }
 
 // Inserts new user into db.
@@ -138,18 +139,19 @@ func (a *App) createUser(w http.ResponseWriter, r *http.Request) {
 	// Gets JSON object from request body.
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&u); err != nil {
-		app.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-
+	// Hash password.
+	u.Password = utils.HashAndSalt([]byte(u.Password))
 	defer r.Body.Close()
 
 	if err := u.CreateUser(d.Database); err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	// Respond with newly created user.
-	app.RespondWithJSON(w, http.StatusCreated, u)
+	utils.RespondWithJSON(w, http.StatusCreated, u)
 }
 
 // Updates user in db using id from URL.
@@ -158,14 +160,14 @@ func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
 	var u model.User
 	// Gets JSON object from request body.
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&u); err != nil {
-		app.RespondWithError(w, http.StatusBadRequest, "Invalid resquest payload")
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid resquest payload")
 		return
 	}
 
@@ -173,11 +175,11 @@ func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
 	u.UserID = id
 
 	if err := u.UpdateUser(d.Database); err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	// Respond with updated user.
-	app.RespondWithJSON(w, http.StatusOK, u)
+	utils.RespondWithJSON(w, http.StatusOK, u)
 }
 
 // Deletes user in db using id from URL.
@@ -186,40 +188,16 @@ func (a *App) deleteUser(w http.ResponseWriter, r *http.Request) {
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
 	u := model.User{UserID: id}
 	if err := u.DeleteUser(d.Database); err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	// Respond with success message if operation is completed.
-	app.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "user deleted"})
+	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "user deleted"})
 }
 
 // Helper functions
-
-// Generate JWT
-func GenerateJWT() (string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	claims := token.Claims.(jwt.MapClaims)
-
-	claims["authorized"] = true
-	claims["client"] = "sermoapi"
-	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
-
-	if os.Getenv("ENV") == "prod" {
-		mySigningKey = []byte(os.Getenv("SIGNING_KEY"))
-	}
-
-	tokenString, err := token.SignedString(mySigningKey)
-
-	if err != nil {
-		// fmt.Errorf("Something Went Wrong: %s", err.Error())
-		return "", err
-	}
-
-	return tokenString, nil
-}

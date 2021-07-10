@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
-	"github.com/dgrijalva/jwt-go"
-	app "github.com/ebcp-dev/sermo/app/utils"
+	utils "github.com/ebcp-dev/sermo/app/utils"
 	"github.com/ebcp-dev/sermo/db"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -58,48 +58,33 @@ func (a *App) Initialize() {
 	a.SignalInitialize()
 }
 
-// Serve homepage
-func homePage(w http.ResponseWriter, r *http.Request) {
-	current_env := os.Getenv("ENV")
-	if current_env == "" {
-		current_env = "dev"
-	}
-	fmt.Fprintln(w, "Welcome to Sermo - API")
-	fmt.Fprintf(w, "ENV: %s", current_env)
-}
-
 // Starts the application.
 func (a *App) Run(addr string) {
 	log.Printf("Server listening on port: %s", addr)
 	log.Fatal(http.ListenAndServe(addr, a.Router))
 }
 
+// Serve homepage
+func homePage(w http.ResponseWriter, r *http.Request) {
+	current_env := os.Getenv("ENV")
+	if current_env == "" {
+		current_env = "dev"
+	}
+	// Show environment.
+	fmt.Fprintln(w, "Welcome to Sermo - API")
+	fmt.Fprintf(w, "ENV: %s", current_env)
+}
+
 // Authorization middleware
 func (a *App) isAuthorized(endpoint func(http.ResponseWriter, *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check if request has "Token" header.
-		if r.Header["Token"] != nil {
-			if len(r.Header["Token"][0]) < 1 {
-				app.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
-			} else {
-				token, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
-					// Check if token is valid based on private `mySigningKey`.
-					if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-						app.RespondWithError(w, http.StatusInternalServerError, "There was error with signing the token.")
-					}
-					return mySigningKey, nil
-				})
-
-				if err != nil {
-					app.RespondWithError(w, http.StatusInternalServerError, err.Error())
-				}
-				// Serve endpoint if token is valid.
-				if token.Valid {
-					endpoint(w, r)
-				}
-			}
+		authorizationHeader := r.Header["Token"]
+		if !utils.ValidateToken(strings.Join(authorizationHeader, "")) {
+			utils.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
+			return
 		} else {
-			app.RespondWithError(w, http.StatusUnauthorized, "Unauthorized")
+			endpoint(w, r)
 		}
 	})
 }

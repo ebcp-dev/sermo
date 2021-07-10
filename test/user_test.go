@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ebcp-dev/sermo/app"
+	"github.com/ebcp-dev/sermo/app/utils"
 )
 
 // Test functions
@@ -18,7 +18,7 @@ import (
 func TestEmptyUserTable(t *testing.T) {
 	clearTable()
 	// Generate JWT for authorization.
-	validToken, err := app.GenerateJWT()
+	validToken, err := utils.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
@@ -40,7 +40,7 @@ func TestEmptyUserTable(t *testing.T) {
 func TestGetNonExistentUser(t *testing.T) {
 	clearTable()
 	// Generate JWT for authorization.
-	validToken, err := app.GenerateJWT()
+	validToken, err := utils.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
@@ -78,7 +78,7 @@ func TestGetUser(t *testing.T) {
 	clearTable()
 	addUsers(1)
 	// Generate JWT for authorization.
-	validToken, err := app.GenerateJWT()
+	validToken, err := utils.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
@@ -108,9 +108,10 @@ func TestCreateUser(t *testing.T) {
 	if m["email"] != "testemail1@gmail.com" {
 		t.Errorf("Expected user email to be 'testemail1@gmail.com'. Got '%v'", m["email"])
 	}
-
-	if m["password"] != "password1" {
-		t.Errorf("Expected user password to be 'password1'. Got '%v'", m["password"])
+	// Get string value from map index.
+	passwordHash := m["password"].(string)
+	if !utils.ComparePasswords(passwordHash, []byte("password1")) {
+		t.Errorf("Passwords do not match.")
 	}
 }
 
@@ -120,7 +121,7 @@ func TestUpdateUser(t *testing.T) {
 	clearTable()
 	addUsers(1)
 	// Generate JWT for authorization.
-	validToken, err := app.GenerateJWT()
+	validToken, err := utils.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
@@ -163,7 +164,7 @@ func TestDeleteUser(t *testing.T) {
 	clearTable()
 	addUsers(1)
 	// Generate JWT for authorization.
-	validToken, err := app.GenerateJWT()
+	validToken, err := utils.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
@@ -197,6 +198,7 @@ func addUsers(count int) {
 
 	for i := 1; i <= count; i++ {
 		timestamp := time.Now()
-		d.Database.Exec("INSERT INTO users(userid, email, password, createdat, updatedat) VALUES($1, $2, $3, $4, $5)", userTestID, "testemail"+strconv.Itoa(i)+"@gmail.com", "password"+strconv.Itoa(i), timestamp, timestamp)
+		passwordHash := utils.HashAndSalt([]byte("password" + strconv.Itoa(i)))
+		d.Database.Exec("INSERT INTO users(userid, email, password, createdat, updatedat) VALUES($1, $2, $3, $4, $5)", userTestID, "testemail"+strconv.Itoa(i)+"@gmail.com", passwordHash, timestamp, timestamp)
 	}
 }

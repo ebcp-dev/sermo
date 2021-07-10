@@ -8,14 +8,14 @@ import (
 	"os"
 	"strconv"
 
-	app "github.com/ebcp-dev/sermo/app/utils"
-	"github.com/ebcp-dev/sermo/model"
+	utils "github.com/ebcp-dev/sermo/app/utils"
+	model "github.com/ebcp-dev/sermo/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
-// Initialize DB and routes.
+// Initialize Channel API.
 func (a *App) ChannelInitialize() {
 	a.initializeChannelRoutes()
 }
@@ -49,7 +49,7 @@ func (a *App) getChannel(w http.ResponseWriter, r *http.Request) {
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
 	ch := model.Channel{ChannelID: id}
@@ -57,15 +57,15 @@ func (a *App) getChannel(w http.ResponseWriter, r *http.Request) {
 		switch err {
 		case sql.ErrNoRows:
 			// Respond with 404 if channel not found in db.
-			app.RespondWithError(w, http.StatusNotFound, "Channel not found")
+			utils.RespondWithError(w, http.StatusNotFound, "Channel not found")
 		default:
 			// Respond if internal server error.
-			app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
 	// If channel found respond with channel object.
-	app.RespondWithJSON(w, http.StatusOK, ch)
+	utils.RespondWithJSON(w, http.StatusOK, ch)
 }
 
 // Gets list of channel with count and start variables from URL.
@@ -85,11 +85,11 @@ func (a *App) getChannels(w http.ResponseWriter, r *http.Request) {
 
 	channel, err := model.GetChannels(d.Database, start, count)
 	if err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	app.RespondWithJSON(w, http.StatusOK, channel)
+	utils.RespondWithJSON(w, http.StatusOK, channel)
 }
 
 // Inserts new channel into db.
@@ -98,18 +98,18 @@ func (a *App) createChannel(w http.ResponseWriter, r *http.Request) {
 	// Gets JSON object from request body.
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&ch); err != nil {
-		app.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
 	defer r.Body.Close()
 
 	if err := ch.CreateChannel(d.Database); err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	// Respond with newly created channel.
-	app.RespondWithJSON(w, http.StatusCreated, ch)
+	utils.RespondWithJSON(w, http.StatusCreated, ch)
 }
 
 // Updates channel in db using id from URL.
@@ -118,14 +118,14 @@ func (a *App) updateChannel(w http.ResponseWriter, r *http.Request) {
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
 	var ch model.Channel
 	// Gets JSON object from request body.
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&ch); err != nil {
-		app.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		utils.RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
@@ -133,11 +133,11 @@ func (a *App) updateChannel(w http.ResponseWriter, r *http.Request) {
 	ch.ChannelID = id
 
 	if err := ch.UpdateChannel(d.Database); err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	// Respond with updated channel.
-	app.RespondWithJSON(w, http.StatusOK, ch)
+	utils.RespondWithJSON(w, http.StatusOK, ch)
 }
 
 // Deletes channel in db using id from URL.
@@ -146,16 +146,16 @@ func (a *App) deleteChannel(w http.ResponseWriter, r *http.Request) {
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
 	if err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
 	ch := model.Channel{ChannelID: id}
 	if err := ch.DeleteChannel(d.Database); err != nil {
-		app.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	// Respond with success message if operation is completed.
-	app.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
 // Helper functions
