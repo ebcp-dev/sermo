@@ -2,7 +2,7 @@
 
 A chat server written in Go using Pion WebRTC and JWT authentication.
 
-[![Build Status](https://ebcp-dev.semaphoreci.com/badges/sermo/branches/master.svg?style=shields&key=eeebee0b-69c4-4904-9e70-dc9c7e8f6ffd)](https://ebcp-dev.semaphoreci.com/projects/sermo)
+https://ebcp-dev.semaphoreci.com/badges/sermo/branches/master.svg?style=shields&key=eeebee0b-69c4-4904-9e70-dc9c7e8f6ffd
 
 Made with:
 

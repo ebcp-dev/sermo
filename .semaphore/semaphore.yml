@@ -31,6 +31,7 @@ blocks:
         commands:
           - sem-version go 1.16
           - sem-service start postgres
+          - createdb -U postgres -h localhost sermo_test
           - checkout
           - 'cache restore '
           - go mod vendor

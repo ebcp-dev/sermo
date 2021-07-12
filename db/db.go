@@ -51,7 +51,7 @@ func (db *DB) Initialize(user string, password string, dbhost string, dbname str
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Connected to db '%v' as user '%v'.", dbname, user)
+	log.Printf("Connecting to db '%v' as user '%v'.", dbname, user)
 	db.Database.Exec(DB_SETUP)
 	db.Database.Exec(USER_SCHEMA)
 	db.Database.Exec(CHANNEL_SCHEMA)
