@@ -29,7 +29,7 @@ blocks:
           value: '-mod=vendor'
       prologue:
         commands:
-          - sem-version go 1.13
+          - sem-version go 1.16
           - sem-service start postgres
           - checkout
           - 'cache restore '
@@ -48,7 +48,7 @@ blocks:
           value: '-mod=vendor'
       prologue:
         commands:
-          - sem-version go 1.13
+          - sem-version go 1.16
           - sem-service start postgres
           - checkout
           - 'cache restore '
