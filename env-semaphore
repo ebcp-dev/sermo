@@ -3,7 +3,7 @@ export APP_DB_PASSWORD=
 export APP_DB_NAME=postgres
 export APP_DB_HOST=localhost
 
-export TEST_DB_USERNAME=postgres
+export TEST_DB_USERNAME=sermo_test
 export TEST_DB_PASSWORD=
 export TEST_DB_NAME=postgres
 export TEST_DB_HOST=localhost
