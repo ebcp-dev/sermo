@@ -1,4 +1,4 @@
-package app
+package api
 
 import (
 	"database/sql"
@@ -16,25 +16,25 @@ import (
 )
 
 // Initialize Channel API.
-func (a *App) ChannelInitialize() {
-	a.initializeChannelRoutes()
+func (api *Api) ChannelInitialize() {
+	api.initializeChannelRoutes()
 }
 
 // Defines routes.
-func (a *App) initializeChannelRoutes() {
-	a.Router.HandleFunc("/channel", a.channelHome).Methods("GET")
-	a.Router.HandleFunc("/channel/{id}", a.getChannel).Methods("GET")
+func (api *Api) initializeChannelRoutes() {
+	api.Router.HandleFunc("/channel", api.channelHome).Methods("GET")
+	api.Router.HandleFunc("/channel/{id}", api.getChannel).Methods("GET")
 	// Authorized routes.
-	a.Router.Handle("/channel", a.isAuthorized(a.createChannel)).Methods("POST")
-	a.Router.Handle("/channels", a.isAuthorized(a.getChannels)).Methods("GET")
-	a.Router.Handle("/channel/{id}", a.isAuthorized(a.updateChannel)).Methods("PUT")
-	a.Router.Handle("/channel/{id}", a.isAuthorized(a.deleteChannel)).Methods("DELETE")
+	api.Router.Handle("/channel", api.isAuthorized(api.createChannel)).Methods("POST")
+	api.Router.Handle("/channels", api.isAuthorized(api.getChannels)).Methods("GET")
+	api.Router.Handle("/channel/{id}", api.isAuthorized(api.updateChannel)).Methods("PUT")
+	api.Router.Handle("/channel/{id}", api.isAuthorized(api.deleteChannel)).Methods("DELETE")
 }
 
 // Route handlers
 
 // Serve homepage
-func (a *App) channelHome(w http.ResponseWriter, r *http.Request) {
+func (api *Api) channelHome(w http.ResponseWriter, r *http.Request) {
 	current_env := os.Getenv("ENV")
 	if current_env == "" {
 		current_env = "dev"
@@ -44,7 +44,7 @@ func (a *App) channelHome(w http.ResponseWriter, r *http.Request) {
 }
 
 // Retrieves channel from db using id from URL.
-func (a *App) getChannel(w http.ResponseWriter, r *http.Request) {
+func (api *Api) getChannel(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
@@ -69,7 +69,7 @@ func (a *App) getChannel(w http.ResponseWriter, r *http.Request) {
 }
 
 // Gets list of channel with count and start variables from URL.
-func (a *App) getChannels(w http.ResponseWriter, r *http.Request) {
+func (api *Api) getChannels(w http.ResponseWriter, r *http.Request) {
 	// Convert count and start string variables to int.
 	count, _ := strconv.Atoi(r.FormValue("count"))
 	start, _ := strconv.Atoi(r.FormValue("start"))
@@ -93,7 +93,7 @@ func (a *App) getChannels(w http.ResponseWriter, r *http.Request) {
 }
 
 // Inserts new channel into db.
-func (a *App) createChannel(w http.ResponseWriter, r *http.Request) {
+func (api *Api) createChannel(w http.ResponseWriter, r *http.Request) {
 	var ch model.Channel
 	// Gets JSON object from request body.
 	decoder := json.NewDecoder(r.Body)
@@ -113,7 +113,7 @@ func (a *App) createChannel(w http.ResponseWriter, r *http.Request) {
 }
 
 // Updates channel in db using id from URL.
-func (a *App) updateChannel(w http.ResponseWriter, r *http.Request) {
+func (api *Api) updateChannel(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
@@ -141,7 +141,7 @@ func (a *App) updateChannel(w http.ResponseWriter, r *http.Request) {
 }
 
 // Deletes channel in db using id from URL.
-func (a *App) deleteChannel(w http.ResponseWriter, r *http.Request) {
+func (api *Api) deleteChannel(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
@@ -157,5 +157,3 @@ func (a *App) deleteChannel(w http.ResponseWriter, r *http.Request) {
 	// Respond with success message if operation is completed.
 	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
-
-// Helper functions

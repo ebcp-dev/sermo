@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ebcp-dev/sermo/app/utils"
+	"github.com/ebcp-dev/sermo/app/auth"
 	model "github.com/ebcp-dev/sermo/models"
 )
 
@@ -19,7 +19,7 @@ import (
 func TestEmptyChannelTable(t *testing.T) {
 	clearTable()
 	// Generate JWT for authorization.
-	validToken, err := utils.GenerateJWT()
+	validToken, err := auth.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
@@ -41,7 +41,7 @@ func TestEmptyChannelTable(t *testing.T) {
 func TestGetNonExistentChannel(t *testing.T) {
 	clearTable()
 	// Generate JWT for authorization.
-	validToken, err := utils.GenerateJWT()
+	validToken, err := auth.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
@@ -65,7 +65,7 @@ func TestGetChannel(t *testing.T) {
 	clearTable()
 	addChannel(1)
 	// Generate JWT for authorization.
-	validToken, err := utils.GenerateJWT()
+	validToken, err := auth.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
@@ -85,7 +85,7 @@ func TestCreateChannel(t *testing.T) {
 	// Create new user for foreign key constraint.
 	addUsers(1)
 	// Generate JWT for authorization.
-	validToken, err := utils.GenerateJWT()
+	validToken, err := auth.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
@@ -127,7 +127,7 @@ func TestUpdateChannel(t *testing.T) {
 	clearTable()
 	addChannel(1)
 	// Generate JWT for authorization.
-	validToken, err := utils.GenerateJWT()
+	validToken, err := auth.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
@@ -170,7 +170,7 @@ func TestDeleteChannel(t *testing.T) {
 	clearTable()
 	addChannel(1)
 	// Generate JWT for authorization.
-	validToken, err := utils.GenerateJWT()
+	validToken, err := auth.GenerateJWT()
 	if err != nil {
 		t.Error("Failed to generate token")
 	}

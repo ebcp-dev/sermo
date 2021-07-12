@@ -20,14 +20,14 @@ type User struct {
 
 // Gets a specific user by UserID.
 func (u *User) GetUser(db *sql.DB) error {
-	return db.QueryRow("SELECT email, password, createdat, updatedat FROM users WHERE UserID=$1",
-		u.UserID).Scan(&u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
+	return db.QueryRow("SELECT UserID, email, password, createdat, updatedat FROM users WHERE UserID=$1",
+		u.UserID).Scan(&u.UserID, &u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 }
 
 // Gets a specific user by Email.
 func (u *User) GetUserByEmail(db *sql.DB) error {
-	return db.QueryRow("SELECT email, password, createdat, updatedat FROM users WHERE email=$1",
-		u.Email).Scan(&u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
+	return db.QueryRow("SELECT UserID, email, password, createdat, updatedat FROM users WHERE email=$1",
+		u.Email).Scan(&u.UserID, &u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 }
 
 // Gets a specific user by email and password.

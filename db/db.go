@@ -42,7 +42,7 @@ const CHANNEL_SCHEMA = `
 `
 
 // Receives database credentials and connects to database.
-func (db *DB) Initialize(user, password, dbhost, dbname string) {
+func (db *DB) Initialize(user string, password string, dbhost string, dbname string) {
 	connectionString := fmt.Sprintf("postgres://%s:%s@%s:5432/%s?sslmode=disable", user, password, dbhost, dbname)
 
 	var err error
@@ -51,6 +51,7 @@ func (db *DB) Initialize(user, password, dbhost, dbname string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Connected to db '%v' as user '%v'.", dbname, user)
 	db.Database.Exec(DB_SETUP)
 	db.Database.Exec(USER_SCHEMA)
 	db.Database.Exec(CHANNEL_SCHEMA)

@@ -1,4 +1,4 @@
-package app
+package api
 
 import (
 	"database/sql"
@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/ebcp-dev/sermo/app/auth"
 	utils "github.com/ebcp-dev/sermo/app/utils"
 	model "github.com/ebcp-dev/sermo/models"
 	"github.com/google/uuid"
@@ -16,26 +17,26 @@ import (
 )
 
 // Initialize User API.
-func (a *App) UserInitialize() {
-	a.initializeUserRoutes()
+func (api *Api) UserInitialize() {
+	api.initializeUserRoutes()
 }
 
 // Defines routes.
-func (a *App) initializeUserRoutes() {
-	a.Router.HandleFunc("/user", a.userHome).Methods("GET")
-	a.Router.HandleFunc("/user", a.createUser).Methods("POST")
-	a.Router.HandleFunc("/user/login", a.loginUser).Methods("POST")
+func (api *Api) initializeUserRoutes() {
+	api.Router.HandleFunc("/user", api.userHome).Methods("GET")
+	api.Router.HandleFunc("/user", api.createUser).Methods("POST")
+	api.Router.HandleFunc("/user/login", api.loginUser).Methods("POST")
 	// Authorized routes.
-	a.Router.Handle("/user/{id}", a.isAuthorized(a.getUser)).Methods("GET")
-	a.Router.Handle("/users", a.isAuthorized(a.getUsers)).Methods("GET")
-	a.Router.Handle("/user/{id}", a.isAuthorized(a.updateUser)).Methods("PUT")
-	a.Router.Handle("/user/{id}", a.isAuthorized(a.deleteUser)).Methods("DELETE")
+	api.Router.Handle("/user/{id}", api.isAuthorized(api.getUser)).Methods("GET")
+	api.Router.Handle("/users", api.isAuthorized(api.getUsers)).Methods("GET")
+	api.Router.Handle("/user/{id}", api.isAuthorized(api.updateUser)).Methods("PUT")
+	api.Router.Handle("/user/{id}", api.isAuthorized(api.deleteUser)).Methods("DELETE")
 }
 
 // Route handlers
 
 // Serve homepage
-func (a *App) userHome(w http.ResponseWriter, r *http.Request) {
+func (api *Api) userHome(w http.ResponseWriter, r *http.Request) {
 	current_env := os.Getenv("ENV")
 	if current_env == "" {
 		current_env = "dev"
@@ -45,7 +46,7 @@ func (a *App) userHome(w http.ResponseWriter, r *http.Request) {
 }
 
 // Retrieves user from db using id from URL.
-func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
+func (api *Api) loginUser(w http.ResponseWriter, r *http.Request) {
 	var u model.User
 	// Gets JSON object from request body.
 	decoder := json.NewDecoder(r.Body)
@@ -62,18 +63,19 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 		case sql.ErrNoRows:
 			// Respond with 404 if user not found in db.
 			utils.RespondWithError(w, http.StatusNotFound, "User not found.")
+			return
 		default:
 			// Respond if internal server error.
 			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		}
 	}
-	if !utils.ComparePasswords(u.Password, []byte(passwordInput)) {
+	if !auth.ComparePasswords(u.Password, []byte(passwordInput)) {
 		// Respond with 401 if hashed passwords don't match.
 		utils.RespondWithError(w, http.StatusUnauthorized, "Invalid login.")
 		return
 	}
 	// Generate and send token to client with response header.
-	validToken, err := utils.GenerateJWT()
+	validToken, err := auth.GenerateJWT()
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -84,7 +86,7 @@ func (a *App) loginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // Retrieves user from db using id from URL.
-func (a *App) getUser(w http.ResponseWriter, r *http.Request) {
+func (api *Api) getUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
@@ -110,7 +112,7 @@ func (a *App) getUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // Gets list of user with count and start variables from URL.
-func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
+func (api *Api) getUsers(w http.ResponseWriter, r *http.Request) {
 	// Convert count and start string variables to int.
 	count, _ := strconv.Atoi(r.FormValue("count"))
 	start, _ := strconv.Atoi(r.FormValue("start"))
@@ -134,7 +136,7 @@ func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // Inserts new user into db.
-func (a *App) createUser(w http.ResponseWriter, r *http.Request) {
+func (api *Api) createUser(w http.ResponseWriter, r *http.Request) {
 	var u model.User
 	// Gets JSON object from request body.
 	decoder := json.NewDecoder(r.Body)
@@ -143,7 +145,7 @@ func (a *App) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Hash password.
-	u.Password = utils.HashAndSalt([]byte(u.Password))
+	u.Password = auth.HashAndSalt([]byte(u.Password))
 	defer r.Body.Close()
 
 	if err := u.CreateUser(d.Database); err != nil {
@@ -155,7 +157,7 @@ func (a *App) createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // Updates user in db using id from URL.
-func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
+func (api *Api) updateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
@@ -173,6 +175,8 @@ func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 	u.UserID = id
+	// Hash password.
+	u.Password = auth.HashAndSalt([]byte(u.Password))
 
 	if err := u.UpdateUser(d.Database); err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
@@ -183,7 +187,7 @@ func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // Deletes user in db using id from URL.
-func (a *App) deleteUser(w http.ResponseWriter, r *http.Request) {
+func (api *Api) deleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	// Convert id string variable to int.
 	id, err := uuid.Parse(vars["id"])
@@ -199,5 +203,3 @@ func (a *App) deleteUser(w http.ResponseWriter, r *http.Request) {
 	// Respond with success message if operation is completed.
 	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "user deleted"})
 }
-
-// Helper functions

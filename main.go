@@ -17,11 +17,10 @@ func main() {
 		log.Fatalf("Error while reading config file %s", err)
 	}
 	// Log current environment.
-	current_env := os.Getenv("ENV")
-	if current_env == "" {
-		current_env = "dev"
+	if os.Getenv("ENV") == "" {
+		os.Setenv("ENV", "dev")
 	}
-	log.Println("ENV: " + current_env)
+	log.Println("ENV: " + os.Getenv("ENV"))
 
 	a := app.App{}
 

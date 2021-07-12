@@ -1,4 +1,4 @@
-package utils
+package auth
 
 import (
 	"fmt"
@@ -14,6 +14,7 @@ import (
 // Used for validating header tokens.
 var mySigningKey = []byte(viper.GetString("SIGNING_KEY"))
 
+// Hash and Salt with bcrypt.
 func HashAndSalt(pwd []byte) string {
 	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
 	if err != nil {
@@ -22,6 +23,7 @@ func HashAndSalt(pwd []byte) string {
 	return string(hash)
 }
 
+// Validate JWT token.
 func ValidateToken(tokenString string) bool {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -35,14 +37,15 @@ func ValidateToken(tokenString string) bool {
 	return token.Valid
 }
 
+// Compare hashed password in db with input password.
 func ComparePasswords(hashedPwd string, plainPwd []byte) bool {
 	byteHash := []byte(hashedPwd)
 	err := bcrypt.CompareHashAndPassword(byteHash, plainPwd)
-	// Return false if no errors.
+	// Return true if no errors.
 	return err == nil
 }
 
-// Generate JWT
+// Generate JWT and return as string.
 func GenerateJWT() (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 

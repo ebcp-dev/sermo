@@ -1,4 +1,4 @@
-package app
+package api
 
 import (
 	"encoding/json"
@@ -48,8 +48,8 @@ func (t *threadSafeWriter) WriteJSON(v interface{}) error {
 }
 
 // Initialize Signal API.
-func (a *App) SignalInitialize() {
-	a.initializeSignalRoutes()
+func (api *Api) SignalInitialize() {
+	api.initializeSignalRoutes()
 
 	// Parse the flags passed to program
 	flag.Parse()
@@ -67,8 +67,8 @@ func (a *App) SignalInitialize() {
 }
 
 // Defines routes.
-func (a *App) initializeSignalRoutes() {
-	a.Router.HandleFunc("/sermo-ws", websocketHandler)
+func (api *Api) initializeSignalRoutes() {
+	api.Router.HandleFunc("/sermo-ws", websocketHandler)
 }
 
 // Handle incoming websockets
