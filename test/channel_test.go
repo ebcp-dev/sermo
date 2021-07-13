@@ -3,6 +3,7 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"testing"
@@ -24,7 +25,7 @@ func TestEmptyChannelTable(t *testing.T) {
 		t.Error("Failed to generate token")
 	}
 
-	req, _ := http.NewRequest("GET", "/channels", nil)
+	req, _ := http.NewRequest("GET", "/api/channels", nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -45,7 +46,7 @@ func TestGetNonExistentChannel(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/channel/"+channelTestID.String(), nil)
+	req, _ := http.NewRequest("GET", "/api/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -70,7 +71,7 @@ func TestGetChannel(t *testing.T) {
 		t.Error("Failed to generate token")
 	}
 
-	req, _ := http.NewRequest("GET", "/channel/"+channelTestID.String(), nil)
+	req, _ := http.NewRequest("GET", "/api/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -90,7 +91,7 @@ func TestCreateChannel(t *testing.T) {
 		t.Error("Failed to generate token")
 	}
 
-	// var jsonStr = []byte(`{"channelname":"channel1", "maxpopulation": 1`)
+	// var jsonStr = []byte(`{"channelname":"testchannel1", "maxpopulation": 1`)
 	newChannel := model.Channel{
 		ChannelName:   "testchannel1",
 		MaxPopulation: 1,
@@ -100,7 +101,7 @@ func TestCreateChannel(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to parse JSON")
 	}
-	req, _ := http.NewRequest("POST", "/channel", bytes.NewBuffer(payload))
+	req, _ := http.NewRequest("POST", "/api/channel", bytes.NewBuffer(payload))
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	req.Header.Set("Content-Type", "application/json")
@@ -111,9 +112,9 @@ func TestCreateChannel(t *testing.T) {
 	var m map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &m)
 
-	if m["channelname"] != "channel1" {
+	if m["channelname"] != "testchannel1" {
 		t.Log(m["channelname"])
-		t.Errorf("Expected channel channelname to be 'channel1'. Got '%v'", m["channelname"])
+		t.Errorf("Expected channel channelname to be 'testchannel1'. Got '%v'", m["channelname"])
 	}
 	// Convert 1 to float64 because Go maps convert int values to float64.
 	if m["maxpopulation"] != float64(1) {
@@ -131,15 +132,24 @@ func TestUpdateChannel(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/channel/"+channelTestID.String(), nil)
+	req, _ := http.NewRequest("GET", "/api/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
 	var originalChannel map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &originalChannel)
 
-	var jsonStr = []byte(`{"channelname":"channel1 - updated", "maxpopulation": 2}`)
-	req, _ = http.NewRequest("PUT", "/channel/"+channelTestID.String(), bytes.NewBuffer(jsonStr))
+	// var jsonStr = []byte(`{"channelname":"testchannel1 - updated", "maxpopulation": 2}`)
+	updatedChannel := model.Channel{
+		ChannelName:   "testchannel1-updated",
+		MaxPopulation: 2,
+		UserID:        userTestID,
+	}
+	payload, err := json.Marshal(updatedChannel)
+	if err != nil {
+		t.Error("Failed to parse JSON")
+	}
+	req, _ = http.NewRequest("PUT", "/api/channel/"+channelTestID.String(), bytes.NewBuffer(payload))
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	req.Header.Set("Content-Type", "application/json")
@@ -152,6 +162,7 @@ func TestUpdateChannel(t *testing.T) {
 	json.Unmarshal(response.Body.Bytes(), &m)
 
 	if m["channelid"] != originalChannel["channelid"] {
+		log.Println(m)
 		t.Errorf("Expected the channelid to remain the same (%v). Got %v", originalChannel["channelid"], m["channelid"])
 	}
 
@@ -175,19 +186,19 @@ func TestDeleteChannel(t *testing.T) {
 		t.Error("Failed to generate token")
 	}
 	// Check that channel exists.
-	req, _ := http.NewRequest("GET", "/channel/"+channelTestID.String(), nil)
+	req, _ := http.NewRequest("GET", "/api/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 	// Delete channel.
-	req, _ = http.NewRequest("DELETE", "/channel/"+channelTestID.String(), nil)
+	req, _ = http.NewRequest("DELETE", "/api/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 	// Check if channel still exists.
-	req, _ = http.NewRequest("GET", "/channel/"+channelTestID.String(), nil)
+	req, _ = http.NewRequest("GET", "/api/channel/"+channelTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)

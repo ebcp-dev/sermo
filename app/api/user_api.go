@@ -22,14 +22,14 @@ func (api *Api) UserInitialize() {
 
 // Defines routes.
 func (api *Api) initializeUserRoutes() {
-	api.Router.HandleFunc("/user", api.userHome).Methods("GET")
-	api.Router.HandleFunc("/user", api.createUser).Methods("POST")
-	api.Router.HandleFunc("/user/login", api.loginUser).Methods("POST")
+	api.Router.HandleFunc("/api/user", api.userHome).Methods("GET")
+	api.Router.HandleFunc("/api/user", api.createUser).Methods("POST")
+	api.Router.HandleFunc("/api/user/login", api.loginUser).Methods("POST")
 	// Authorized routes.
-	api.Router.Handle("/user/{id}", api.isAuthorized(api.getUser)).Methods("GET")
-	api.Router.Handle("/users", api.isAuthorized(api.getUsers)).Methods("GET")
-	api.Router.Handle("/user/{id}", api.isAuthorized(api.updateUser)).Methods("PUT")
-	api.Router.Handle("/user/{id}", api.isAuthorized(api.deleteUser)).Methods("DELETE")
+	api.Router.Handle("/api/user/{id}", api.isAuthorized(api.getUser)).Methods("GET")
+	api.Router.Handle("/api/users", api.isAuthorized(api.getUsers)).Methods("GET")
+	api.Router.Handle("/api/user/{id}", api.isAuthorized(api.updateUser)).Methods("PUT")
+	api.Router.Handle("/api/user/{id}", api.isAuthorized(api.deleteUser)).Methods("DELETE")
 }
 
 // Route handlers

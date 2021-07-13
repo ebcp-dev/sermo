@@ -23,7 +23,7 @@ func TestEmptyUserTable(t *testing.T) {
 		t.Error("Failed to generate token")
 	}
 
-	req, _ := http.NewRequest("GET", "/users", nil)
+	req, _ := http.NewRequest("GET", "/api/users", nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -44,7 +44,7 @@ func TestGetNonExistentUser(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/user/"+userTestID.String(), nil)
+	req, _ := http.NewRequest("GET", "/api/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -65,7 +65,7 @@ func TestLoginUser(t *testing.T) {
 	addUsers(1)
 
 	var jsonStr = []byte(`{"email":"testemail1@gmail.com", "password":"password1"}`)
-	req, _ := http.NewRequest("POST", "/user/login", bytes.NewBuffer(jsonStr))
+	req, _ := http.NewRequest("POST", "/api/user/login", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
 	response := executeRequest(req)
@@ -82,7 +82,7 @@ func TestGetUser(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/user/"+userTestID.String(), nil)
+	req, _ := http.NewRequest("GET", "/api/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -96,7 +96,7 @@ func TestCreateUser(t *testing.T) {
 	clearTable()
 
 	var jsonStr = []byte(`{"email":"testemail1@gmail.com", "password": "password1"}`)
-	req, _ := http.NewRequest("POST", "/user", bytes.NewBuffer(jsonStr))
+	req, _ := http.NewRequest("POST", "/api/user", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
 	response := executeRequest(req)
@@ -125,7 +125,7 @@ func TestUpdateUser(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to generate token")
 	}
-	req, _ := http.NewRequest("GET", "/user/"+userTestID.String(), nil)
+	req, _ := http.NewRequest("GET", "/api/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
@@ -133,7 +133,7 @@ func TestUpdateUser(t *testing.T) {
 	json.Unmarshal(response.Body.Bytes(), &originalUser)
 
 	var jsonStr = []byte(`{"email":"testemail1@gmail.com - updated email", "password": "password1 - updated password"}`)
-	req, _ = http.NewRequest("PUT", "/user/"+userTestID.String(), bytes.NewBuffer(jsonStr))
+	req, _ = http.NewRequest("PUT", "/api/user/"+userTestID.String(), bytes.NewBuffer(jsonStr))
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	req.Header.Set("Content-Type", "application/json")
@@ -169,19 +169,19 @@ func TestDeleteUser(t *testing.T) {
 		t.Error("Failed to generate token")
 	}
 	// Check that user exists.
-	req, _ := http.NewRequest("GET", "/user/"+userTestID.String(), nil)
+	req, _ := http.NewRequest("GET", "/api/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 	// Delete user.
-	req, _ = http.NewRequest("DELETE", "/user/"+userTestID.String(), nil)
+	req, _ = http.NewRequest("DELETE", "/api/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 	// Check if user still exists.
-	req, _ = http.NewRequest("GET", "/user/"+userTestID.String(), nil)
+	req, _ = http.NewRequest("GET", "/api/user/"+userTestID.String(), nil)
 	// Add "Token" header to request with generated token.
 	req.Header.Add("Token", validToken)
 	response = executeRequest(req)

@@ -21,13 +21,13 @@ func (api *Api) ChannelInitialize() {
 
 // Defines routes.
 func (api *Api) initializeChannelRoutes() {
-	api.Router.HandleFunc("/channel", api.channelHome).Methods("GET")
-	api.Router.HandleFunc("/channel/{id}", api.getChannel).Methods("GET")
+	api.Router.HandleFunc("/api/channel", api.channelHome).Methods("GET")
+	api.Router.HandleFunc("/api/channel/{id}", api.getChannel).Methods("GET")
 	// Authorized routes.
-	api.Router.Handle("/channel", api.isAuthorized(api.createChannel)).Methods("POST")
-	api.Router.Handle("/channels", api.isAuthorized(api.getChannels)).Methods("GET")
-	api.Router.Handle("/channel/{id}", api.isAuthorized(api.updateChannel)).Methods("PUT")
-	api.Router.Handle("/channel/{id}", api.isAuthorized(api.deleteChannel)).Methods("DELETE")
+	api.Router.Handle("/api/channel", api.isAuthorized(api.createChannel)).Methods("POST")
+	api.Router.Handle("/api/channels", api.isAuthorized(api.getChannels)).Methods("GET")
+	api.Router.Handle("/api/channel/{id}", api.isAuthorized(api.updateChannel)).Methods("PUT")
+	api.Router.Handle("/api/channel/{id}", api.isAuthorized(api.deleteChannel)).Methods("DELETE")
 }
 
 // Route handlers
