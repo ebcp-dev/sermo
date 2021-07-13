@@ -79,15 +79,21 @@ func (u *User) CreateUser(db *sql.DB) error {
 // Updates a specific user's details by UserID.
 func (u *User) UpdateUser(db *sql.DB) error {
 	timestamp := time.Now()
-	_, err :=
-		db.Exec("UPDATE users SET email=$1, password=$2, updatedat=$3 WHERE UserID=$4 RETURNING UserID, email, password, createdat, updatedat", u.Email, u.Password, timestamp, u.UserID)
+	err :=
+		db.QueryRow("UPDATE users SET email=$1, password=$2, updatedat=$3 WHERE UserID=$4 RETURNING UserID, email, password, createdat, updatedat", u.Email, u.Password, timestamp, u.UserID).Scan(&u.UserID, &u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
+	if err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
 
 // Deletes a specific user by UserID.
 func (u *User) DeleteUser(db *sql.DB) error {
-	_, err := db.Exec("DELETE FROM users WHERE UserID=$1", u.UserID)
+	_, err := db.Exec("DELETE FROM users WHERE UserID=$1 RETURNING email", u.UserID)
+	if err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }

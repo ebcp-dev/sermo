@@ -2,7 +2,7 @@
 
 A chat server written in Go using Pion WebRTC and JWT authentication.
 
-https://ebcp-dev.semaphoreci.com/badges/sermo/branches/master.svg?style=shields&key=eeebee0b-69c4-4904-9e70-dc9c7e8f6ffd
+[![Build Status](https://ebcp-dev.semaphoreci.com/badges/sermo/branches/master.svg?style=shields&key=eeebee0b-69c4-4904-9e70-dc9c7e8f6ffd)](https://ebcp-dev.semaphoreci.com/projects/sermo)
 
 Made with:
 
@@ -85,7 +85,6 @@ Links:
     - https://medium.com/@kdnotes/golang-naming-rules-and-conventions-8efeecd23b68
     - https://devhints.io/go
 
-Known Issues:
+Todo:
 
-- Update query goes through even if id doesn't exist.
-- Delete query goes through even if id doesn't exist.
+- need to add more fields to models

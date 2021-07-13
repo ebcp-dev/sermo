@@ -1,7 +1,6 @@
 package api
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -54,14 +53,7 @@ func (api *Api) getChannel(w http.ResponseWriter, r *http.Request) {
 
 	ch := model.Channel{ChannelID: id}
 	if err := ch.GetChannel(d.Database); err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			// Respond with 404 if channel not found in db.
-			utils.RespondWithError(w, http.StatusNotFound, "Channel not found")
-		default:
-			// Respond if internal server error.
-			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-		}
+		utils.DBNoRowsError(w, err, ch)
 		return
 	}
 	// If channel found respond with channel object.
@@ -133,7 +125,7 @@ func (api *Api) updateChannel(w http.ResponseWriter, r *http.Request) {
 	ch.ChannelID = id
 
 	if err := ch.UpdateChannel(d.Database); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.DBNoRowsError(w, err, ch)
 		return
 	}
 	// Respond with updated channel.
@@ -151,9 +143,9 @@ func (api *Api) deleteChannel(w http.ResponseWriter, r *http.Request) {
 
 	ch := model.Channel{ChannelID: id}
 	if err := ch.DeleteChannel(d.Database); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.DBNoRowsError(w, err, ch)
 		return
 	}
 	// Respond with success message if operation is completed.
-	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+	utils.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "channel deleted"})
 }

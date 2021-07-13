@@ -92,7 +92,7 @@ func TestCreateChannel(t *testing.T) {
 
 	// var jsonStr = []byte(`{"channelname":"channel1", "maxpopulation": 1`)
 	newChannel := model.Channel{
-		ChannelName:   "channel1",
+		ChannelName:   "testchannel1",
 		MaxPopulation: 1,
 		UserID:        userTestID,
 	}

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -59,15 +58,7 @@ func (api *Api) loginUser(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	// Find user in db with email from request body.
 	if err := u.GetUserByEmail(d.Database); err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			// Respond with 404 if user not found in db.
-			utils.RespondWithError(w, http.StatusNotFound, "User not found.")
-			return
-		default:
-			// Respond if internal server error.
-			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-		}
+		utils.DBNoRowsError(w, err, u)
 	}
 	if !auth.ComparePasswords(u.Password, []byte(passwordInput)) {
 		// Respond with 401 if hashed passwords don't match.
@@ -97,14 +88,7 @@ func (api *Api) getUser(w http.ResponseWriter, r *http.Request) {
 
 	u := model.User{UserID: id}
 	if err := u.GetUser(d.Database); err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			// Respond with 404 if user not found in db.
-			utils.RespondWithError(w, http.StatusNotFound, "User not found")
-		default:
-			// Respond if internal server error.
-			utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-		}
+		utils.DBNoRowsError(w, err, u)
 		return
 	}
 	// If user found respond with user object.
@@ -165,21 +149,21 @@ func (api *Api) updateUser(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 
-	var u model.User
 	// Gets JSON object from request body.
+	var u model.User
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&u); err != nil {
 		utils.RespondWithError(w, http.StatusBadRequest, "Invalid resquest payload")
 		return
 	}
+	u.UserID = id
 
 	defer r.Body.Close()
-	u.UserID = id
 	// Hash password.
 	u.Password = auth.HashAndSalt([]byte(u.Password))
 
 	if err := u.UpdateUser(d.Database); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.DBNoRowsError(w, err, u)
 		return
 	}
 	// Respond with updated user.
@@ -197,7 +181,7 @@ func (api *Api) deleteUser(w http.ResponseWriter, r *http.Request) {
 
 	u := model.User{UserID: id}
 	if err := u.DeleteUser(d.Database); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.DBNoRowsError(w, err, u)
 		return
 	}
 	// Respond with success message if operation is completed.
